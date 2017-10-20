@@ -128,6 +128,10 @@ along with LinBPQ/BPQ32.  If not, see http://www.gnu.org/licenses
 #include <ctype.h>
 #include <math.h>
 
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
 
 struct WL2KInfo * DecodeWL2KReportLine(char *  buf);
 
@@ -1970,6 +1974,7 @@ char rec[];
 */
 
 
+int
 decode_port_rec(char * rec)
 {
 	int i;
@@ -2583,6 +2588,7 @@ static int troutine[] =
 
 #define TPARAMLIM 6
 
+int
 decode_tnc_rec(char * rec)
 {
 	char key_word[20];
@@ -2779,6 +2785,7 @@ static int droutine[] =
 
 #define DPARAMLIM 6
 
+int
 decode_ded_rec(rec)
 char rec[];
 {
