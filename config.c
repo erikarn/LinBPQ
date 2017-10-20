@@ -2090,6 +2090,7 @@ decode_port_rec(char * rec)
 	}
 
 	if (_stricmp(key_word, "XDIGI") == 0)
+#if 0
 	{
 		// Cross Port Digi definition
 
@@ -2115,10 +2116,11 @@ decode_port_rec(char * rec)
 
 				// Add to chain
 
+#if 0
 				if (PortRec->XDIGIS)
 					Digi->Next = PortRec->XDIGIS;
-		
 				PortRec->XDIGIS = Digi;
+#endif
 				return 0;
 			}
 		}
@@ -2126,6 +2128,13 @@ decode_port_rec(char * rec)
 		porterror = 1;
 		return 0;
 	}
+#else
+	{
+		Consoleprintf("ERROR: XDIGI disabled; because pointers are hard\n");
+		porterror = 1;
+		return 0;
+	}
+#endif
 
 
 /************************************************************************/

@@ -924,7 +924,9 @@ BOOL Start()
 		if (PortRec->BCALL[0])
 			ConvToAX25(PortRec->BCALL, PORT->PORTBCALL);
 
+#if 0
 		PORT->XDIGIS = PortRec->XDIGIS;		// Crossband digi aliases
+#endif
 
 		memcpy(&PORT->PORTIPADDR, &PortRec->IPADDR, 4);
 		PORT->ListenPort = PortRec->ListenPort;
@@ -937,8 +939,10 @@ BOOL Start()
 				PORT->KISSSLAVE = TRUE;
 		}
 
+#if 0
 		if (PortRec->WL2K)
 			memcpy(&PORT->WL2KInfo, PortRec->WL2K, sizeof(struct WL2KInfo));
+#endif
 
 		//	SEE IF PERMITTED LINK CALLSIGNS SPECIFIED
 

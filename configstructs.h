@@ -126,9 +126,11 @@ struct PORTCONFIG
 	uint16_t TCPPORT;	// 244
 	char Pad2[10];			// 246
 	char VALIDCALLS[256];	//   256 - 512
-	char  * WL2K;			// 512
+//	char  * WL2K;			// 512
+	uint32_t pad0;
 	char SerialPortName[80]; // 516
-	struct XDIGI * XDIGIS;	//  596 Cross port digi setup
+//	struct XDIGI * XDIGIS;	//  596 Cross port digi setup
+	uint32_t pad1;
 
 	char filler [424];		// 600 - 1023
 } __attribute__((packed));
