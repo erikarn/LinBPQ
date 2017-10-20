@@ -247,14 +247,14 @@ HANDLE LinuxOpenPTY(char * Name)
 	u_long param=1;
 	struct termios term;
 
-#ifdef MACBPQ
+#if defined(MACBPQ) || defined(__FreeBSD__)
 
 	// Create a pty pair
 	
 	openpty(&hDevice, &slave, &slavedevice[0], NULL, NULL);
 	close(slave);
 
-#else
+#elif defined(__Linux__)
 	 
 	hDevice = posix_openpt(O_RDWR|O_NOCTTY);
 

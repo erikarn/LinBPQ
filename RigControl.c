@@ -53,8 +53,6 @@ along with LinBPQ/BPQ32.  If not, see http://www.gnu.org/licenses
 #include "tncinfo.h"
 #ifndef LINBPQ
 #include <commctrl.h>
-#else
-char *fcvt(double number, int ndigits, int *decpt, int *sign);  
 #endif
 #include "bpq32.h"
 
@@ -318,8 +316,8 @@ int Rig_Command(int Session, char * Command)
 	char FreqString[80]="", FilterString[80]="", Mode[80]="", Data[80] = "";
 	UINT * buffptr;
 	UCHAR * Poll;
-	char * 	Valchar ;
-	int dec, sign;
+	char Valchar[64];
+//	int dec, sign;
 	struct RIGPORTINFO * PORT;
 	int i, p;
 	struct RIGINFO * RIG;
@@ -483,19 +481,7 @@ portok:
 	}
 	Freq = Freq * 1000000.0;
 
-	Valchar = _fcvt(Freq, 0, &dec, &sign);
-
-	if (dec == 9)	// 10-100
-		sprintf(FreqString, "%s", Valchar);
-	else
-	if (dec == 8)	// 10-100
-		sprintf(FreqString, "0%s", Valchar);
-	else
-	if (dec == 7)	// 1-10
-		sprintf(FreqString, "00%s", Valchar);
-	else
-	if (dec == 6)	// 0 - 1
-		sprintf(FreqString, "000%s", Valchar);
+	snprintf(FreqString, 32, "%.9d", Freq);
 
 	if (PORT->PortType != ICOM)
 		strcpy(Data, FilterString);			// Others don't have a filter.
@@ -2240,7 +2226,7 @@ SetFinished:
 		RIG->RigFreq = Freq / 1000000.0;
 
 //		Valchar = _fcvt(FreqF, 6, &dec, &sign);
-		_gcvt(RIG->RigFreq, 9, RIG->Valchar);
+		snprintf(RIG->Valchar, 32, "%.9f", RIG->RigFreq);
  
 		sprintf(RIG->WEB_FREQ,"%s", RIG->Valchar);
 		SetWindowText(RIG->hFREQ, RIG->WEB_FREQ);
@@ -2326,7 +2312,7 @@ VOID ProcessFT100Frame(struct RIGPORTINFO * PORT)
 	if (PORT->YaesuVariant == FT1000MP)
 		FreqF = FreqF / 2;				// No idea why!
 
-	_gcvt(FreqF, 9, RIG->Valchar);
+	snprintf(RIG->Valchar, 32, "%.9f", FreqF);
 
 	sprintf(RIG->WEB_FREQ,"%s", RIG->Valchar);
 	SetWindowText(RIG->hFREQ, RIG->WEB_FREQ);
@@ -2376,7 +2362,7 @@ VOID ProcessFT990Frame(struct RIGPORTINFO * PORT)
 	
 	FreqF = (Freq * 10.0) / 1000000;
 
-	_gcvt(FreqF, 9, RIG->Valchar);
+	snprintf(RIG->Valchar, 32, "%.9f", FreqF);
 
 	sprintf(RIG->WEB_FREQ,"%s", RIG->Valchar);
 	SetWindowText(RIG->hFREQ, RIG->WEB_FREQ);
@@ -2425,7 +2411,7 @@ VOID ProcessFT1000Frame(struct RIGPORTINFO * PORT)
 		FreqF = (Freq * 10.0) / 1000000;
 	}
 
-	_gcvt(FreqF, 9, RIG->Valchar);
+	snprintf(RIG->Valchar, 32, "%.9f", FreqF);
 
 	sprintf(RIG->WEB_FREQ,"%s", RIG->Valchar);
 	SetWindowText(RIG->hFREQ, RIG->WEB_FREQ);
@@ -2552,7 +2538,7 @@ VOID ProcessYaesuFrame(struct RIGPORTINFO * PORT)
 	FreqF = Freq / 100000.0;
 
 //		Valchar = _fcvt(FreqF, 6, &dec, &sign);
-	_gcvt(FreqF, 9, RIG->Valchar);
+	snprintf(RIG->Valchar, 32, "%.9f", FreqF);
 
 	sprintf(RIG->WEB_FREQ,"%s", RIG->Valchar);
 	SetWindowText(RIG->hFREQ, RIG->WEB_FREQ);
@@ -4050,22 +4036,7 @@ CheckScan:
 		Freq = Freq * 1000000.0;
 
 
-		Valchar = _fcvt(Freq, 0, &dec, &sign);
-
-		if (dec == 9)	// 10-100
-			sprintf(FreqString, "%s", Valchar);
-		else
-		if (dec == 8)	// 10-100
-			sprintf(FreqString, "0%s", Valchar);		
-		else
-		if (dec == 7)	// 1-10
-			sprintf(FreqString, "00%s", Valchar);
-		else
-		if (dec == 6)	// 0.1 - 1
-			sprintf(FreqString, "000%s", Valchar);
-		else
-		if (dec == 5)	// 0.01 - .1
-			sprintf(FreqString, "000%s", Valchar);
+		snprintf(FreqString, 32, "%.9d", Freq);
 
 		FreqPtr[0] = malloc(sizeof(struct ScanEntry));
 		memset(FreqPtr[0], 0, sizeof(struct ScanEntry));

@@ -1,3 +1,4 @@
+#if 0
 /*
 Copyright 2001-2015 John Wiseman G8BPQ
 
@@ -495,4 +496,5 @@ static ProcessLine(char * buf, int Port, BOOL CheckPort)
 	return (FALSE);
 	
 }
-	
+
+#endif

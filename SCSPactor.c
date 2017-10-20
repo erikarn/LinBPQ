@@ -89,11 +89,12 @@ along with LinBPQ/BPQ32.  If not, see http://www.gnu.org/licenses
 #include "bpq32.h"
 
 #ifndef WIN32
-#ifndef MACBPQ
 #include <sys/ioctl.h>
+#endif /* WIN32 */
+
+#if defined(__Linux__)
 #include <linux/serial.h>
-#endif
-#endif
+#endif /* __Linux__ */
 
 static char ClassName[]="PACTORSTATUS";
 static char WindowTitle[] = "SCS Pactor";
@@ -395,8 +396,7 @@ static int ExtProc(int fn, int port,unsigned char * buff)
 		if (TNC->hDevice == 0)
 			return 0;
 
-#ifndef WIN32
-#ifndef MACBPQ
+#if defined(__Linux__)
 
 		if (TNC->Dragon)
 		{
@@ -423,8 +423,7 @@ static int ExtProc(int fn, int port,unsigned char * buff)
 					Debugprintf("Dragon custom baud rate set\n");
 			}
 		}
-#endif
-#endif
+#endif	/* __Linux__ */
 	}
 ok:
 	switch (fn)
@@ -929,9 +928,7 @@ UINT SCSExtInit(EXTPORTDATA *  PortEntry)
 #endif
 	OpenCOMMPort(TNC, PortEntry->PORTCONTROL.SerialPortName, PortEntry->PORTCONTROL.BAUDRATE, FALSE);
 
-#ifndef WIN32
-#ifndef MACBPQ
-
+#if defined(__Linux__)
 	if (TNC->Dragon)
 	{
 		struct serial_struct sstruct;
@@ -957,8 +954,7 @@ UINT SCSExtInit(EXTPORTDATA *  PortEntry)
 				Debugprintf("Dragon custom baud rate set\n");
 		}
 	}
-#endif
-#endif
+#endif /* __Linux__ */
 
 	if (TNC->RobustDefault)
 		SwitchToPacket(TNC);

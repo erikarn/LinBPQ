@@ -42,12 +42,10 @@ along with LinBPQ/BPQ32.  If not, see http://www.gnu.org/licenses
 
 #include "bpq32.h"
 
-#ifndef WIN32
-#ifndef MACBPQ
+#if defined(__Linux__)
 #include <sys/ioctl.h>
 #include <linux/serial.h>
-#endif
-#endif
+#endif /* __Linux__ */
 
 static char ClassName[]="DRAGONSTATUS";
 static char WindowTitle[] = "P4Dragon";
@@ -303,9 +301,7 @@ static int ExtProc(int fn, int port,unsigned char * buff)
 		if (TNC->hDevice == 0)
 			return 0;
 
-#ifndef WIN32
-#ifndef MACBPQ
-
+#if defined(__Linux__)
 		if (TNC->Dragon)
 		{
 			struct serial_struct sstruct;
@@ -331,8 +327,7 @@ static int ExtProc(int fn, int port,unsigned char * buff)
 					Debugprintf("Dragon custom baud rate set\n");
 			}
 		}
-#endif
-#endif
+#endif	/* __Linux__ */
 	}
 ok:
 	switch (fn)
@@ -817,8 +812,7 @@ UINT DragonExtInit(EXTPORTDATA *  PortEntry)
 #endif
 	OpenCOMMPort(TNC, PortEntry->PORTCONTROL.SerialPortName, PortEntry->PORTCONTROL.BAUDRATE, FALSE);
 
-#ifndef WIN32
-#ifndef MACBPQ
+#if defined(__Linux__)
 
 	if (TNC->Dragon)
 	{
@@ -845,8 +839,7 @@ UINT DragonExtInit(EXTPORTDATA *  PortEntry)
 				Debugprintf("Dragon custom baud rate set\n");
 		}
 	}
-#endif
-#endif
+#endif /* __Linux__ */
 
 	if (TNC->RobustDefault)
 		SwitchToPacket(TNC);
@@ -2235,12 +2228,6 @@ VOID DragonReleasePort(struct TNCINFO * TNC)
 
 	Debugprintf("SCS Pactor CMDSet = %s", STREAM->CmdSet);
 }
-
-
-
-
-
-
 
 VOID SwitchToPacketOnly(struct TNCINFO * TNC)
 {

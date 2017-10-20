@@ -628,14 +628,11 @@ Dll BOOL APIENTRY Init_IP()
 
 	// Linux - if TAP requested, open it
 
-#ifndef WIN32
-#ifndef MACBPQ
+#if defined(_Linux__)
 
 	if (WantTAP)
 		OpenTAP();
-
-#endif
-#endif
+#endif /* __Linux__ */
 
 	ReadARP();
 	ReadIPRoutes();
@@ -4309,9 +4306,8 @@ VOID RecalcUDPChecksum(PIPMSG IPptr)
 	UDPmsg->CHECKSUM = Generate_CHECKSUM(UDPmsg, Len);
 }
 
-#ifndef WIN32
-#ifndef MACBPQ
 
+#if defined(__Linux__)
 #include <net/if.h>
 #include <linux/if_tun.h>
 
@@ -4520,8 +4516,7 @@ void OpenTAP()
 
 	close(sockfd);
 }
-#endif
-#endif
+#endif /* __Linux__ */
 
 extern struct DATAMESSAGE * REPLYBUFFER;
 

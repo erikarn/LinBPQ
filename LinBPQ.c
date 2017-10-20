@@ -28,9 +28,9 @@ along with LinBPQ/BPQ32.  If not, see http://www.gnu.org/licenses
 #include "C:\Program Files (x86)\GnuWin32\include\iconv.h"
 #else
 #include <iconv.h>
-#ifndef MACBPQ
+#if defined(__Linux__)
 #include <sys/prctl.h>
-#endif
+#endif /* __Linux__ */
 #endif
 
 #define Connect(stream) SessionControl(stream,1,0)
@@ -503,9 +503,9 @@ int main(int argc, char * argv[])
 
 #else
 	openlog("LINBPQ", LOG_PID, LOG_DAEMON);
-#ifndef MACBPQ
+#if defined(__Linux__)
 	prctl(PR_SET_DUMPABLE, 1);					// Enable Core Dumps even with setcap
-#endif
+#endif /* __Linux__ */
 #endif
 
 	printf("G8BPQ AX25 Packet Switch System Version %s %s\n", TextVerstring, Datestring);
@@ -516,9 +516,9 @@ int main(int argc, char * argv[])
 
 	Debugprintf("G8BPQ AX25 Packet Switch System Version %s %s", TextVerstring, Datestring);
 
-#ifndef MACBPQ
+#if defined(__Linux__)
 	_MYTIMEZONE = timezone;
-#endif
+#endif /* __Linux__ */
 
 	if (_MYTIMEZONE < -86400 || _MYTIMEZONE > 86400)
 		_MYTIMEZONE = 0;

@@ -12,7 +12,7 @@ Stuff to make compiling on WINDOWS and LINUX easier
 #include <string.h>
 #include <time.h>
 #ifndef MACBPQ
-#include <malloc.h>
+#include <unistd.h>
 #endif
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -123,8 +123,6 @@ typedef DWORD   COLORREF;
 
 #define _snprintf snprintf
 
-#define _gcvt gcvt
-#define _fcvt fcvt
 #define _atoi64 atoll 
 
 #define DeleteFile unlink
