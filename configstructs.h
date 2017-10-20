@@ -1,5 +1,5 @@
 
-#pragma pack(1) 
+#pragma pack(1)
 
 // MAKE SURE SHORTS ARE CORRECTLY ALLIGNED FOR ARMV5
 
@@ -63,7 +63,7 @@ struct CONFIGTABLE
 	UCHAR C_VERSION;			// CONFIG PROG VERSION
 //	Reuse C_APPLICATIONS - no longer used
 	char C_NETROMCALL[10]; 
-};
+} __attribute__((packed));
 
 struct PORTCONFIG
 {
@@ -118,7 +118,7 @@ struct PORTCONFIG
 	char PORTALIAS2[10];	//  200,
 	char DLLNAME[16];		//  210,
 	char BCALL[10];			// 226,
-	unsigned long IPADDR;	// 236
+	uint32_t IPADDR;	// 236
 	char I2CMode;			// 240
 	char I2CAddr;			// 241
 	char INP3ONLY;			// 242
@@ -131,5 +131,4 @@ struct PORTCONFIG
 	struct XDIGI * XDIGIS;	//  596 Cross port digi setup
 
 	char filler [424];		// 600 - 1023
-};
-
+} __attribute__((packed));
