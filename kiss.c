@@ -76,7 +76,9 @@ int i2c_smbus_read_byte()
 #include "CHeaders.h"
 #include "kiss.h"
 
-
+#ifndef	WIN32
+static int i2cPoll(struct PORTCONTROL * PORT, NPASYINFO npKISSINFO);
+#endif
 
 #define FEND 0xC0 
 #define FESC 0xDB
@@ -1428,7 +1430,8 @@ SeeifMore:
 
 #ifndef WIN32
 
-int i2cPoll(struct PORTCONTROL * PORT, NPASYINFO npKISSINFO)
+static int
+i2cPoll(struct PORTCONTROL * PORT, NPASYINFO npKISSINFO)
 {
 	unsigned int retval;
 	int len;
