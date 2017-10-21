@@ -47,9 +47,13 @@ along with LinBPQ/BPQ32.  If not, see http://www.gnu.org/licenses
 #include <winioctl.h>
 #include "WS2tcpip.h"
 #else
-#define TIOCOUTQ        0x5411
 #define SIOCOUTQ        TIOCOUTQ        /* output queue size (not sent + not acked) */
 #endif
+
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
 
 #include "telnetserver.h"
 
@@ -153,8 +157,8 @@ VOID SendtoNode(struct TNCINFO * TNC, int Stream, char * Msg, int MsgLen);
 DllExport int APIENTRY GetNumberofPorts();
 
 BOOL CheckCMS(struct TNCINFO * TNC);
-int TCPConnect(struct TNCINFO * TNC, struct TCPINFO * TCP, struct STREAMINFO * STREAM, char * Host, int Port, BOOL FBB);
-int CMSConnect(struct TNCINFO * TNC, struct TCPINFO * TCP, struct STREAMINFO * STREAM,  int Stream);
+static int TCPConnect(struct TNCINFO * TNC, struct TCPINFO * TCP, struct STREAMINFO * STREAM, char * Host, int Port, BOOL FBB);
+static int CMSConnect(struct TNCINFO * TNC, struct TCPINFO * TCP, struct STREAMINFO * STREAM,  int Stream);
 int Telnet_Connected(struct TNCINFO * TNC, struct ConnectionInfo * sockptr, SOCKET sock, int Error);
 BOOL ProcessConfig();
 VOID FreeConfig();
@@ -244,6 +248,7 @@ VOID SendPortsForMonitor(SOCKET sock)
 	send(sock, PortInfo, ptr - PortInfo, 0);
 }
 
+static int
 ProcessLine(char * buf, int Port)
 {
 	UCHAR * ptr;
@@ -1042,9 +1047,8 @@ static int WebProc(struct TNCINFO * TNC, char * Buff, BOOL LOCAL)
 	return Len;
 }
 
-
-
-UINT TelnetExtInit(EXTPORTDATA * PortEntry)
+void *
+TelnetExtInit(EXTPORTDATA * PortEntry)
 {
 	char msg[500];
 	struct TNCINFO * TNC;
@@ -1138,7 +1142,7 @@ UINT TelnetExtInit(EXTPORTDATA * PortEntry)
 		// Not defined in Config file
 
 		WritetoConsoleLocal("\n");
-		return (int)ExtProc;
+		return ExtProc;
 	}
 
 	TCP = TNC->TCPInfo;
@@ -1258,7 +1262,7 @@ UINT TelnetExtInit(EXTPORTDATA * PortEntry)
 
 	ShowConnections(TNC);
 
-	return ((int)ExtProc);
+	return ExtProc;
 }
 
 SOCKET OpenSocket4(struct TNCINFO * xTNC, int port)
@@ -4382,16 +4386,6 @@ int Telnet_Connected(struct TNCINFO * TNC, struct ConnectionInfo * sockptr, SOCK
 				
 	Debugprintf("Except Event Error = %d", Error);
 #ifndef WIN32
-
-//	SO_ERROR codes
-
-#define	ETIMEDOUT		110	/* Connection timed out */
-#define	ECONNREFUSED	111	/* Connection refused */
-#define	EHOSTDOWN		112	/* Host is down */
-#define	EHOSTUNREACH	113	/* No route to host */
-#define	EALREADY		114	/* Operation already in progress */
-#define	EINPROGRESS		115	/* Operation now in progress */
-
 	if (Error == 0)
 		getsockopt(sock, SOL_SOCKET, SO_ERROR, (char *)&Error, &errlen);
 
@@ -4883,8 +4877,7 @@ BOOL CMSCheck(struct TNCINFO * TNC, struct TCPINFO * TCP)
 	return FALSE;
 }
 
-
-					
+static int
 CMSConnect(struct TNCINFO * TNC, struct TCPINFO * TCP, struct STREAMINFO * STREAM, int Stream)
 {
 	int err;
@@ -5102,9 +5095,8 @@ VOID SaveCMSHostInfo(int port, struct TCPINFO * TCP, int CMSNo)
 	return;
 }
 
-
 //Keep this in case we ever do general outgoing TCP
-
+static int
 TCPConnect(struct TNCINFO * TNC, struct TCPINFO * TCP, struct STREAMINFO * STREAM, char * Host, int Port, BOOL FBB)
 {
 	int err;

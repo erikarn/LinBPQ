@@ -85,6 +85,12 @@ int (WINAPI FAR *EnumProcessesPtr)();
 #define SD_SEND         0x01
 #define SD_BOTH         0x02
 
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+
+
 #include "bpq32.h"
 
 #include "tncinfo.h"
@@ -312,7 +318,8 @@ VOID WritetoTrace(struct TNCINFO * TNC, char * Msg, int Len)
 }
 #endif
 
-static ProcessLine(char * buf, int Port)
+static int
+ProcessLine(char * buf, int Port)
 {
 	UCHAR * ptr,* p_cmd;
 	char * p_ipad = 0;
@@ -1362,7 +1369,8 @@ static int WebProc(struct TNCINFO * TNC, char * Buff, BOOL LOCAL)
 }
 
 
-UINT WinmorExtInit(EXTPORTDATA * PortEntry)
+void *
+WinmorExtInit(EXTPORTDATA * PortEntry)
 {
 	int i, port;
 	char Msg[255];
@@ -1392,7 +1400,7 @@ UINT WinmorExtInit(EXTPORTDATA * PortEntry)
 		sprintf(Msg," ** Error - no info in BPQ32.cfg for this port\n");
 		WritetoConsole(Msg);
 
-		return (int) ExtProc;
+		return ExtProc;
 	}
 
 	TNC->Port = port;
@@ -1570,7 +1578,7 @@ UINT WinmorExtInit(EXTPORTDATA * PortEntry)
 
 	time(&TNC->lasttime);			// Get initial time value
 
-	return ((int) ExtProc);
+	return ExtProc;
 }
 
 int ConnecttoWINMOR(int port)

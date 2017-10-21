@@ -143,7 +143,7 @@ static void WriteLogLine(int Flags, char * Msg, int MsgLen)
 }
 
 
-
+static int
 ProcessLine(char * buf, int Port)
 {
 	UCHAR * ptr,* p_cmd;
@@ -467,7 +467,8 @@ static int WebProc(struct TNCINFO * TNC, char * Buff, BOOL LOCAL)
 }
 
 
-UINT HALExtInit(EXTPORTDATA *  PortEntry)
+void *
+HALExtInit(EXTPORTDATA *  PortEntry)
 {
 	char msg[500];
 	struct TNCINFO * TNC;
@@ -497,7 +498,7 @@ UINT HALExtInit(EXTPORTDATA *  PortEntry)
 		sprintf(msg," ** Error - no info in BPQ32.cfg for this port");
 		WritetoConsole(msg);
 
-		return (int)ExtProc;
+		return ExtProc;
 	}
 	
 	TNC->Port = port;
@@ -599,7 +600,7 @@ UINT HALExtInit(EXTPORTDATA *  PortEntry)
 
 	WritetoConsole("\n");
 
-	return ((int)ExtProc);
+	return ExtProc;
 }
 
 

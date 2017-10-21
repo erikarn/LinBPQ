@@ -33,6 +33,11 @@ along with LinBPQ/BPQ32.  If not, see http://www.gnu.org/licenses
 #include <stdio.h>
 #include <time.h>
 
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+
 #include "tncinfo.h"
 
 #include "bpq32.h"
@@ -68,7 +73,7 @@ int Update_MH_List(struct in_addr ipad, char * call, char proto);
 
 static int ConnecttoMPSK();
 static int ProcessReceivedData(int bpqport);
-static ProcessLine(char * buf, int Port);
+static int ProcessLine(char * buf, int Port);
 int KillTNC(struct TNCINFO * TNC);
 int RestartTNC(struct TNCINFO * TNC);
 VOID ProcessMPSKPacket(struct TNCINFO * TNC, char * Message, int Len);
@@ -672,7 +677,8 @@ static RestartTNC(struct TNCINFO * TNC)
 }
 #endif
 
-UINT MPSKExtInit(EXTPORTDATA * PortEntry)
+void *
+MPSKExtInit(EXTPORTDATA * PortEntry)
 {
 	int i, port;
 	char Msg[255];
@@ -699,7 +705,7 @@ UINT MPSKExtInit(EXTPORTDATA * PortEntry)
 		sprintf(Msg," ** Error - no info in BPQ32.cfg for this port\n");
 		WritetoConsole(Msg);
 
-		return (int) ExtProc;
+		return ExtProc;
 	}
 
 	TNC->Port = port;
@@ -767,12 +773,13 @@ UINT MPSKExtInit(EXTPORTDATA * PortEntry)
 
 //	SendMessage(0x40eaa, WM_COMMAND, 0x03000eaa, 0x40eaa);
 
-	return ((int) ExtProc);
+	return ExtProc;
 
 }
 
 
-static ProcessLine(char * buf, int Port)
+static int
+ProcessLine(char * buf, int Port)
 {
 	UCHAR * ptr,* p_cmd;
 	char * p_ipad = 0;

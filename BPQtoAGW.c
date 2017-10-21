@@ -72,7 +72,6 @@ along with LinBPQ/BPQ32.  If not, see http://www.gnu.org/licenses
 
 #include <time.h>
 
-
 #define VERSION_MAJOR         2
 #define VERSION_MINOR         0
 
@@ -91,7 +90,7 @@ int Update_MH_List(struct in_addr ipad, char * call, char proto);
 static BOOL ReadConfigFile(int Port);
 int ConnecttoAGW();
 int ProcessReceivedData(int bpqport);
-static ProcessLine(char * buf, int Port, BOOL CheckPort);
+static int ProcessLine(char * buf, int Port, BOOL CheckPort);
 
 
 extern UCHAR BPQDirectory[];
@@ -400,8 +399,8 @@ static int ExtProc(int fn, int port,unsigned char * buff)
 	return 0;
 }
 
-UINT AGWExtInit(struct PORTCONTROL *  PortEntry)
-
+void *
+AGWExtInit(struct PORTCONTROL *  PortEntry)
 {
 	int i, port;
 	char Msg[255];
@@ -463,8 +462,7 @@ UINT AGWExtInit(struct PORTCONTROL *  PortEntry)
 
 	time(&lasttime[port]);			// Get initial time value
 
-	
-	return ((int) ExtProc);
+	return ExtProc;
 
 }
 
@@ -520,6 +518,7 @@ BOOL ReadConfigFile(int Port)
 	return (TRUE);
 }
 
+static int
 ProcessLine(char * buf, int Port, BOOL CheckPort)
 {
 	char * ptr,* p_user,* p_password;

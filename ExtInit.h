@@ -20,6 +20,8 @@ extern void * TrackerExtInit(EXTPORTDATA * PortEntry);
 extern void * TrackerMExtInit(EXTPORTDATA * PortEntry);
 
 extern void * TelnetExtInit(EXTPORTDATA * PortEntry);
+
+/* These below haven't yet been converted to the "right" function signature yet */
 extern void * UZ7HOExtInit(EXTPORTDATA * PortEntry);
 extern void * FLDigiExtInit(EXTPORTDATA * PortEntry);
 extern void * ETHERExtInit(struct PORTCONTROL *  PortEntry);

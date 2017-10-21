@@ -508,8 +508,8 @@ static int WebProc(struct TNCINFO * TNC, char * Buff, BOOL LOCAL)
 	return Len;
 }
 
-
-UINT TrackerExtInit(EXTPORTDATA *  PortEntry)
+void *
+TrackerExtInit(EXTPORTDATA *  PortEntry)
 {
 	char msg[500];
 	struct TNCINFO * TNC;
@@ -540,7 +540,7 @@ UINT TrackerExtInit(EXTPORTDATA *  PortEntry)
 		sprintf(msg," ** Error - no info in BPQ32.cfg for this port\n");
 		WritetoConsoleLocal(msg);
 
-		return (int) ExtProc;
+		return ExtProc;
 	}
 	
 	TNC->Port = port;
@@ -678,7 +678,7 @@ UINT TrackerExtInit(EXTPORTDATA *  PortEntry)
 
 	WritetoConsoleLocal("\n");
 
-	return ((int)ExtProc);
+	return ExtProc;
 }
 
 static void DEDCheckRX(struct TNCINFO * TNC)

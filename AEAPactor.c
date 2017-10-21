@@ -100,6 +100,7 @@ static VOID EncodeAndSend(struct TNCINFO * TNC, UCHAR * txbuffer, int Len);
 static int	DLEEncode(UCHAR * inbuff, UCHAR * outbuff, int len);
 static int	DLEDecode(UCHAR * inbuff, UCHAR * outbuff, int len);
 
+static int
 ProcessLine(char * buf, int Port)
 {
 	UCHAR * ptr,* p_cmd;
@@ -354,7 +355,8 @@ static int ExtProc(int fn, int port,unsigned char * buff)
 }
 
 
-UINT AEAExtInit(EXTPORTDATA *  PortEntry)
+void *
+AEAExtInit(EXTPORTDATA *  PortEntry)
 {
 	char msg[500];
 	struct TNCINFO * TNC;
@@ -383,7 +385,7 @@ UINT AEAExtInit(EXTPORTDATA *  PortEntry)
 		sprintf(msg," ** Error - no info in BPQ32.cfg for this port\n");
 		WritetoConsole(msg);
 
-		return (int)ExtProc;
+		return ExtProc;
 	}
 
 	TNC->Port = port;
@@ -495,7 +497,7 @@ UINT AEAExtInit(EXTPORTDATA *  PortEntry)
 
 	WritetoConsole("\n");
 
-	return ((int)ExtProc);
+	return ExtProc;
 }
 
 static void CheckRX(struct TNCINFO * TNC)

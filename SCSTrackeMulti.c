@@ -327,7 +327,8 @@ static int ExtProc(int fn, int port,unsigned char * buff)
 	return 0;
 }
 
-UINT TrackerMExtInit(EXTPORTDATA *  PortEntry)
+void *
+TrackerMExtInit(EXTPORTDATA *  PortEntry)
 {
 	char msg[500];
 	struct TNCINFO * TNC;
@@ -359,7 +360,7 @@ UINT TrackerMExtInit(EXTPORTDATA *  PortEntry)
 		sprintf(msg," ** Error - no info in BPQ32.cfg for this port\n");
 		WritetoConsole(msg);
 
-		return (int) ExtProc;
+		return ExtProc;
 	}
 	
 	TNC->Port = port;
@@ -430,7 +431,7 @@ UINT TrackerMExtInit(EXTPORTDATA *  PortEntry)
 
 	WritetoConsole("\n");
 
-	return ((int)ExtProc);
+	return ExtProc;
 }
 
 static void DEDCheckRX(struct TNCINFO * TNC)

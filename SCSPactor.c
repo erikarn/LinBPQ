@@ -96,6 +96,8 @@ along with LinBPQ/BPQ32.  If not, see http://www.gnu.org/licenses
 #include <linux/serial.h>
 #endif /* __Linux__ */
 
+#include "SCSPactor.h"
+
 static char ClassName[]="PACTORSTATUS";
 static char WindowTitle[] = "SCS Pactor";
 static int RigControlRow = 185;
@@ -186,10 +188,8 @@ static void WriteLogLine(int Flags, char * Msg, int MsgLen)
 #endif
 }
 
-
-
-
-static ProcessLine(char * buf, int Port)
+static int
+ProcessLine(char * buf, int Port)
 {
 	UCHAR * ptr,* p_cmd;
 	char * p_ipad = 0;
@@ -342,8 +342,6 @@ VOID DoTNCReinit(struct TNCINFO * TNC);
 VOID DoTermModeTimeout(struct TNCINFO * TNC);
 static VOID DoMonitor(struct TNCINFO * TNC, UCHAR * Msg, int Len);
 int Switchmode(struct TNCINFO * TNC, int Mode);
-VOID SwitchToPactor(struct TNCINFO * TNC);
-VOID SwitchToPacket(struct TNCINFO * TNC);
 
 
 char status[8][8] = {"ERROR",  "REQUEST", "TRAFFIC", "IDLE", "OVER", "PHASE", "SYNCH", ""};
@@ -736,7 +734,8 @@ static int WebProc(struct TNCINFO * TNC, char * Buff, BOOL LOCAL)
 	return Len;
 }
 
-UINT SCSExtInit(EXTPORTDATA *  PortEntry)
+void *
+SCSExtInit(EXTPORTDATA *  PortEntry)
 {
 	char msg[500];
 	struct TNCINFO * TNC;
@@ -766,7 +765,7 @@ UINT SCSExtInit(EXTPORTDATA *  PortEntry)
 		sprintf(msg," ** Error - no info in BPQ32.cfg for this port\n");
 		WritetoConsole(msg);
 
-		return (int) ExtProc;
+		return ExtProc;
 	}
 	
 	TNC->Port = port;
@@ -961,7 +960,7 @@ UINT SCSExtInit(EXTPORTDATA *  PortEntry)
 
 	WritetoConsole("\n");
 
-	return ((int)ExtProc);
+	return ExtProc;
 }
 
 void SCSCheckRX(struct TNCINFO * TNC)
