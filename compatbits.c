@@ -38,6 +38,7 @@ int pthread_equal(pthread_t T1, pthread_t T2)
 #include <ctype.h>
 #include <syslog.h>
 #include <stdarg.h>
+#include <unistd.h>
 
 #define BOOL int
 

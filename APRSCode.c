@@ -61,7 +61,6 @@ static VOID DoMinTimer();
 static APRSProcessLine(char * buf);
 static BOOL APRSReadConfigFile();
 VOID APRSISThread(BOOL Report);
-unsigned long _beginthread( void( *start_address )(BOOL Report), unsigned stack_size, void * arglist);
 VOID __cdecl Debugprintf(const char * format, ...);
 VOID __cdecl Consoleprintf(const char * format, ...);
 BOOL APIENTRY  Send_AX(PMESSAGE Block, DWORD Len, UCHAR Port);

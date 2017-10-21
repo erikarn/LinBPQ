@@ -127,8 +127,6 @@ static int ProcessLine(char * buf, int Port);
 VOID __cdecl Debugprintf(const char * format, ...);
 char * strlop(char * buf, char delim);
 
-unsigned long _beginthread( void( *start_address )(), unsigned stack_size, struct TNCINFO * arglist);
-
 #ifndef LINBPQ
 LRESULT CALLBACK TelWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
 #endif
@@ -629,7 +627,8 @@ lineloop:
 	}
 }
 
-static int ExtProc(int fn, int port,unsigned char * buff)
+static int
+ExtProc(int fn, int port,unsigned char * buff)
 {
 	int txlen = 0, n;
 	UINT * buffptr;

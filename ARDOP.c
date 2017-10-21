@@ -95,8 +95,6 @@ struct TNCINFO * TNCInfo[34];		// Records are Malloc'd
 
 static int ProcessLine(char * buf, int Port);
 
-unsigned long _beginthread( void( *start_address )(), unsigned stack_size, int arglist);
-
 // RIGCONTROL COM60 19200 ICOM IC706 5e 4 14.103/U1w 14.112/u1 18.1/U1n 10.12/l1
 
 int GenCRC16(unsigned char * Data, unsigned short length)
@@ -360,7 +358,7 @@ ProcessLine(char * buf, int Port)
 
 
 
-void ARDOPThread(int port);
+static void ARDOPThread(void *arg);
 VOID ARDOPProcessDataSocketData(int port);
 int ConnecttoARDOP();
 static VOID ARDOPProcessReceivedData(struct TNCINFO * TNC);
@@ -1608,28 +1606,39 @@ ARDOPExtInit(EXTPORTDATA * PortEntry)
 
 int ConnecttoARDOP(int port)
 {
-	_beginthread(ARDOPThread,0,port);
+	int * portarg;
+
+	portarg = malloc(sizeof(int));
+	if (portarg == NULL)
+		perror("malloc");
+	*portarg = port;
+	_beginthread(ARDOPThread, 0, portarg);
 
 	return 0;
 }
 
-VOID ARDOPThread(port)
+// Opens socket and looks for data on control socket.
+static void
+ARDOPThread(void *arg)
 {
-	// Opens socket and looks for data on control socket.
+	int *portarg = (void *) arg;
+	int port = *portarg;
 	
 	// Socket may be TCP/IP or Serial
-
 	char Msg[255];
 	int err, i, ret;
 	u_long param=1;
 	BOOL bcopt=TRUE;
 	struct hostent * HostEnt;
-	struct TNCINFO * TNC = TNCInfo[port];
+	struct TNCINFO *TNC = TNCInfo[port];
 	fd_set readfs;
 	fd_set errorfs;
 	struct timeval timeout;
 	char * ptr1, * ptr2;
 	UINT * buffptr;
+
+	/* No longer need this */
+	free(portarg);
 
 	if (TNC->WINMORHostName == NULL)
 		return;
@@ -1679,7 +1688,7 @@ VOID ARDOPThread(port)
 		WritetoConsole(Msg);
 
 	 	TNC->CONNECTING = FALSE;
-  	 	return; 
+  	 	return;
 	}
  
 	setsockopt (TNC->WINMORSock, SOL_SOCKET, SO_REUSEADDR, (const char FAR *)&bcopt, 4);
@@ -1700,7 +1709,7 @@ VOID ARDOPThread(port)
 		closesocket(TNC->WINMORSock);
 	 	TNC->CONNECTING = FALSE;
 
-  	 	return; 
+  	 	return;
 	}
 
 	if (connect(TNC->WINMORSock,(LPSOCKADDR) &TNC->destaddr,sizeof(TNC->destaddr)) == 0)

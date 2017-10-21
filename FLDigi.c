@@ -65,8 +65,6 @@ int (WINAPI FAR *EnumProcessesPtr)();
 
 #define AGWHDDRLEN sizeof(struct AGWHEADER)
 
-unsigned long _beginthread( void( *start_address )(), unsigned stack_size, int arglist);
-
 extern int (WINAPI FAR *GetModuleFileNameExPtr)();
 
 //int ResetExtDriver(int num);

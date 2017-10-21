@@ -120,7 +120,6 @@ VOID __cdecl Debugprintf(const char * format, ...);
 
 char NodeCall[11];		// Nodecall, Null Terminated
 
-unsigned long _beginthread( void( *start_address )(), unsigned stack_size, int arglist);
 int DoScanLine(struct TNCINFO * TNC, char * Buff, int Len);
 
 VOID SuspendOtherPorts(struct TNCINFO * ThisTNC);

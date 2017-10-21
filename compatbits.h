@@ -33,6 +33,13 @@ extern	void Sleep(int msec);
 extern	int sprintf_s(char *buf, int plen, const char *fmt, ...) __attribute__((format(printf, 3, 4)));
 #endif
 
+/*
+ * This is a wrapper around pthread_create() for non-Windows systems.
+ */
+#ifndef	WIN32
+unsigned long _beginthread(void(*start_address)(void *), unsigned stack_size, void * arglist);
+#endif
+
 #ifdef WIN32
 
 #define _CRT_SECURE_NO_DEPRECATE 

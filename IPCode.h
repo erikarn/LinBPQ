@@ -7,8 +7,6 @@
 
 #define IDI_ICON2                       123
 
-unsigned long _beginthread( void *, unsigned stack_size, void * arglist);
-
 #pragma pack(1) 
 
 typedef struct _ETHMSG

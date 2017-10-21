@@ -57,8 +57,6 @@ extern int Ver[];
 int KillTNC(struct TNCINFO * TNC);
 int RestartTNC(struct TNCINFO * TNC);
 
-unsigned long _beginthread( void( *start_address )(), unsigned stack_size, int arglist);
-
 char * GetChallengeResponse(char * Call, char *  ChallengeString);
 
 VOID __cdecl Debugprintf(const char * format, ...);

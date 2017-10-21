@@ -57,9 +57,8 @@ char * strlop(char * buf, char delim);
 
 char NodeCall[11];		// Nodecall, Null Terminated
 
-unsigned long _beginthread( void( *start_address )(), unsigned stack_size, int arglist);
-
-static ProcessLine(char * buf, int Port)
+static int
+ProcessLine(char * buf, int Port)
 {
 	UCHAR * ptr;
 	char * p_port = 0;
