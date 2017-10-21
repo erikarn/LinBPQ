@@ -93,6 +93,12 @@ ShellExecute( NULL,
 #include <stdio.h>
 #include <time.h>
 
+/* inet_addr */
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+
 #include "CHeaders.h"
 
 #include "IPCode.h"
@@ -111,6 +117,8 @@ ShellExecute( NULL,
 #include "kernelresource.h"
 LRESULT CALLBACK ResWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
 #endif
+
+static int ProcessLine(char * buf);
 
 //#define s_addr  S_un.S_addr
 
@@ -3220,7 +3228,8 @@ static BOOL ReadConfigFile()
 	return TRUE;
 }
 
-static ProcessLine(char * buf)
+static int
+ProcessLine(char * buf)
 {
 	char * ptr, * p_value, * p_origport, * p_host, * p_port;
 	int port, mappedport, ipad, mappedipad;
