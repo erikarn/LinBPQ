@@ -21,5 +21,5 @@ linbpq: $(OBJS)
 -include *.d
 
 clean :
-	rm linbpq $(OBJS)
+	rm -f linbpq $(OBJS)
 
