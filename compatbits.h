@@ -18,13 +18,15 @@ Stuff to make compiling on WINDOWS and LINUX easier
 #include <sys/stat.h>
 #include <stdlib.h>
 
+#ifndef	WIN32
+extern	void Sleep(int msec);
+#endif
+
 #ifdef WIN32
 
 #define _CRT_SECURE_NO_DEPRECATE 
 #define _USE_32BIT_TIME_T
 #include <crtdbg.h>
-
-
 
 #include "winsock2.h"
 #include "WS2tcpip.h"
@@ -175,7 +177,6 @@ typedef struct tagRECT
 #undef SetWindowText
 #endif
 //#define SetWindowText  MySetWindowText
-
 
 #ifdef SetDlgItemText
 #undef SetDlgItemText
