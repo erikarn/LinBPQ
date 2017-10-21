@@ -47,6 +47,9 @@ along with LinBPQ/BPQ32.  If not, see http://www.gnu.org/licenses
 #include <linux/serial.h>
 #endif /* __Linux__ */
 
+#include "SCSPactor.h"
+#include "ExtInit.h"
+
 static char ClassName[]="DRAGONSTATUS";
 static char WindowTitle[] = "P4Dragon";
 static int RigControlRow = 185;
@@ -80,7 +83,8 @@ VOID DragonReleasePort(struct TNCINFO * TNC);
 
 
 
-static ProcessLine(char * buf, int Port)
+static int
+ProcessLine(char * buf, int Port)
 {
 	UCHAR * ptr,* p_cmd;
 	char * p_ipad = 0;
@@ -624,7 +628,8 @@ static int WebProc(struct TNCINFO * TNC, char * Buff, BOOL LOCAL)
 	return Len;
 }
 
-UINT DragonExtInit(EXTPORTDATA *  PortEntry)
+void *
+DragonExtInit(EXTPORTDATA *  PortEntry)
 {
 	char msg[500];
 	struct TNCINFO * TNC;
@@ -654,7 +659,7 @@ UINT DragonExtInit(EXTPORTDATA *  PortEntry)
 		sprintf(msg," ** Error - no info in BPQ32.cfg for this port\n");
 		WritetoConsole(msg);
 
-		return (int) ExtProc;
+		return ExtProc;
 	}
 	
 	TNC->Port = port;
@@ -846,7 +851,7 @@ UINT DragonExtInit(EXTPORTDATA *  PortEntry)
 
 	WritetoConsole("\n");
 
-	return ((int)ExtProc);
+	return ExtProc;
 }
 
 VOID DragonPoll(int Port)
