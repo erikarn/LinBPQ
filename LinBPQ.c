@@ -33,6 +33,8 @@ along with LinBPQ/BPQ32.  If not, see http://www.gnu.org/licenses
 #endif /* __Linux__ */
 #endif
 
+#include "ExtInit.h"
+
 #define Connect(stream) SessionControl(stream,1,0)
 #define Disconnect(stream) SessionControl(stream,2,0)
 #define ReturntoNode(stream) SessionControl(stream,3,0)
@@ -1186,31 +1188,6 @@ int WritetoConsoleLocal(char * buff)
 {
 	return printf("%s", buff);
 }
-/*
-UINT VCOMExtInit(struct PORTCONTROL *  PortEntry);
-UINT SoundModemExtInit(EXTPORTDATA * PortEntry);
-UINT V4ExtInit(EXTPORTDATA * PortEntry);
-UINT BaycomExtInit(EXTPORTDATA * PortEntry);
-*/
-
-void * AEAExtInit(struct PORTCONTROL *  PortEntry);
-void * MPSKExtInit(EXTPORTDATA * PortEntry);
-void * HALExtInit(struct PORTCONTROL *  PortEntry);
-
-void * AGWExtInit(struct PORTCONTROL *  PortEntry);
-void * KAMExtInit(struct PORTCONTROL *  PortEntry);
-void * WinmorExtInit(EXTPORTDATA * PortEntry);
-void * SCSExtInit(struct PORTCONTROL *  PortEntry);
-void * TrackerExtInit(EXTPORTDATA * PortEntry);
-void * TrackerMExtInit(EXTPORTDATA * PortEntry);
-
-void * TelnetExtInit(EXTPORTDATA * PortEntry);
-void * UZ7HOExtInit(EXTPORTDATA * PortEntry);
-void * FLDigiExtInit(EXTPORTDATA * PortEntry);
-void * ETHERExtInit(struct PORTCONTROL *  PortEntry);
-void * AXIPExtInit(struct PORTCONTROL *  PortEntry);
-void * ARDOPExtInit(EXTPORTDATA * PortEntry);
-void * DragonExtInit(EXTPORTDATA * PortEntry);
 
 void *
 InitializeExtDriver(PEXTPORTDATA PORTVEC)
