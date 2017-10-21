@@ -930,7 +930,9 @@ VOID SENDFRAME(struct KISSINFO * KISS, UINT * Buffer)
 
 		if (ACKWORD)					// Frame Needs ACK
 		{
+			fprintf(stderr, "%s: WTF: ackword=%u\n", __func__, ACKWORD);
 			ENCBUFF[1] |= 0x0c;			// ACK OPCODE 
+			/* XXX TODO This (LINKS below) is struct LINKTABLE * !!! */
 			ACKWORD -= (UINT)LINKS;		// Con only send 16 bits, so use offset into LINKS
 			ENCBUFF[2] = ACKWORD & 0xff;
 			ENCBUFF[3] = (ACKWORD >> 8) &0xff;
@@ -1345,6 +1347,12 @@ SeeifMore:
 		struct _LINKTABLE * LINK;
 		UINT ACKWORD = Port->RXMSG[1] | Port->RXMSG[2] << 8;
 
+		/* XXX TODO XXX WTF Is this code sending /pointers/ to our memory? */
+		/*
+		 * This code reads like it's sending the LINKTABLE entry
+		 * pointer in the ACKWORD.
+		 */
+		fprintf(stderr, "%s: TODO: ACKWORD=%d; this likely is going to blow up!\n", __func__, ACKWORD);
 		ACKWORD += (UINT)LINKS;
 		LINK = (struct _LINKTABLE *)ACKWORD;
 
