@@ -18,8 +18,19 @@ Stuff to make compiling on WINDOWS and LINUX easier
 #include <sys/stat.h>
 #include <stdlib.h>
 
+/* Sleep() is a Win32 construct */
 #ifndef	WIN32
 extern	void Sleep(int msec);
+#endif
+
+/*
+ * sprintf_s() is a Win32 construct.
+ *
+ * It's like sprintf, but with the snprintf bits and some
+ * extra parameter validation.
+ */
+#ifndef	WIN32
+extern	int sprintf_s(char *buf, int plen, const char *fmt, ...) __attribute__((format(printf, 3, 4)));
 #endif
 
 #ifdef WIN32
