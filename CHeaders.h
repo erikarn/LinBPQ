@@ -2,6 +2,9 @@
 // Prototypes for BPQ32 Node Functions
 //
 
+#ifndef	__CHEADERS_H__
+#define	__CHEADERS_H__
+
 #define DllImport
 
 #include "compatbits.h"
@@ -357,3 +360,5 @@ extern int REALTIMETICKS;
 
 int InOctets[32];
 int OutOctets[32];
+
+#endif /* __CHEADERS_H__ */
