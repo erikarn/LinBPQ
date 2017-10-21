@@ -44,6 +44,12 @@ along with LinBPQ/BPQ32.  If not, see http://www.gnu.org/licenses
 #include <sys/mman.h>
 #include <sys/un.h>
 
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+
+
 int sfd;
 struct sockaddr_un my_addr, peer_addr;
 socklen_t peer_addr_size;
@@ -58,9 +64,9 @@ socklen_t peer_addr_size;
 static BOOL APIENTRY  GETSENDNETFRAMEADDR();
 static VOID DoSecTimer();
 static VOID DoMinTimer();
-static APRSProcessLine(char * buf);
+static int APRSProcessLine(char * buf);
 static BOOL APRSReadConfigFile();
-VOID APRSISThread(BOOL Report);
+VOID APRSISThread(void *arg);
 VOID __cdecl Debugprintf(const char * format, ...);
 VOID __cdecl Consoleprintf(const char * format, ...);
 BOOL APIENTRY  Send_AX(PMESSAGE Block, DWORD Len, UCHAR Port);
@@ -285,7 +291,14 @@ APRSSTATIONRECORD MHTABLE[MAXHEARD] = {0};
 
 APRSSTATIONRECORD * MHDATA = &MHTABLE[0];
 
-static SOCKET sock = (SOCKET) NULL;
+/*
+ * XXX TODO: this should be -1 for an unallocated socket, not 0
+ * but a bunch of code needs to be audited here before that can happen.
+ *
+ * XXX TODO: this definition gets overshadowed by local 'sock' definitions
+ * in functions, sigh.  Fix that!
+ */
+static SOCKET sock = 0;
 
 //Duplicate suppression Code
 
@@ -691,7 +704,13 @@ Dll BOOL APIENTRY Init_APRS()
 
 	if (ISPort && IGateEnabled)
 	{
-		_beginthread(APRSISThread, 0, (VOID *) TRUE);
+		BOOL *arg;
+
+		arg = malloc(sizeof(BOOL));
+		if (arg == NULL)
+			perror("malloc");
+		*arg = TRUE;
+		_beginthread(APRSISThread, 0, arg);
 	}
 
 	if (GPSPort)
@@ -1427,7 +1446,8 @@ BOOL ConvertCalls(char * DigiCalls, UCHAR * AX, int * Lens)
 
 
 
-static APRSProcessLine(char * buf)
+static int
+APRSProcessLine(char * buf)
 {
 	char * ptr, * p_value;
 
@@ -2241,8 +2261,15 @@ VOID DoSecTimer()
 
 		if (ISDelayTimer > 60)
 		{
+			BOOL *arg;
+
+			arg = malloc(sizeof(BOOL));
+			if (arg == NULL)
+				perror("malloc");
+			*arg = TRUE;
+
 			ISDelayTimer = 0;
-			_beginthread(APRSISThread, 0, (VOID *) TRUE);
+			_beginthread(APRSISThread, 0, arg);
 		}
 	}
 
@@ -2378,9 +2405,11 @@ char APRSMsg[300];
 
 int ISHostIndex = 0;
 
-VOID APRSISThread(BOOL Report)
+VOID APRSISThread(void *arg)
 {
 	// Receive from core server
+	BOOL *argval = (void *)arg;
+	BOOL Report = *argval;
 
 	char Signon[500];
 	unsigned char work[4];
@@ -2400,6 +2429,8 @@ VOID APRSISThread(BOOL Report)
 	char PortString[20];
 	char host[256];
 	char serv[256];
+
+	free(argval);
 
 	Debugprintf("BPQ32 APRS IS Thread");
 #ifndef LINBPQ
@@ -2671,7 +2702,7 @@ VOID ProcessAPRSISMsg(char * APRSMsg)
 
 	memcpy(IGateCall, ptr, strlen(ptr));
 
-	if (strstr(APRSMsg, ",qAS,") == 0)		// Findu generates invalid q construct
+	if (strstr(APRSMsg, ",qAS,") == NULL)		// Findu generates invalid q construct
 	{
 		MH = LookupStation(IGateCall);
 		if (MH)
@@ -3012,8 +3043,7 @@ BOOL OpenGPSPort()
 
 	// open COMM device
 
-	portptr->hDevice = OpenCOMPort((VOID *)GPSPort, GPSSpeed, TRUE, TRUE, FALSE, 0);
-				  
+	portptr->hDevice = OpenCOMPort(NULL, GPSPort, GPSSpeed, TRUE, TRUE, FALSE, 0);
 	if (portptr->hDevice == 0)
 	{
 		return FALSE;
@@ -6147,9 +6177,9 @@ VOID APRSSendMessageFile(struct APRSConnectionInfo * sockptr, char * FN)
 		// Build Station list, depending on URL
 	
 		int Count = 0;
-		BOOL RFOnly = (BOOL)strstr(_strlwr(FN), "rf");		// Leaves FN in lower case
-		BOOL WX = (BOOL)strstr(FN, "wx");
-		BOOL Mobile = (BOOL)strstr(FN, "mobile");
+		BOOL RFOnly = strstr(_strlwr(FN), "rf") != NULL;		// Leaves FN in lower case
+		BOOL WX = strstr(FN, "wx") != NULL;
+		BOOL Mobile = strstr(FN, "mobile") != NULL;
 		char Objects = (strstr(FN, "obj"))? '*' :0;
 		char * StationList;
 				
@@ -6257,10 +6287,10 @@ VOID APRSProcessHTTPMessage(SOCKET sock, char * MsgPtr)
 			if (ptr)
 			{
 				*ptr = 0;
-				RFOnly = (BOOL)strstr(Referrer, "rf");
-				WX = (BOOL)strstr(Referrer, "wx");
-				Mobile = (BOOL)strstr(Referrer, "mobile");
-				Object = (BOOL)strstr(Referrer, "obj");
+				RFOnly = strstr(Referrer, "rf") != NULL;
+				WX = strstr(Referrer, "wx") != NULL;
+				Mobile = strstr(Referrer, "mobile") != NULL;
+				Object = strstr(Referrer, "obj") != NULL;
 
 				if (WX)
 					strcpy(URL, "/aprs/infowx_call.html");

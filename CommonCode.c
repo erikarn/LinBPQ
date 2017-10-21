@@ -1895,10 +1895,10 @@ OpenCOMMPort(struct TNCINFO * conn, char * Port, int Speed, BOOL Quiet)
 	if (_memicmp(Port, "COM", 3) == 0)
 	{
 		PortNum = atoi(&Port[3]);
-		conn->hDevice = OpenCOMPort((VOID *)PortNum, Speed, TRUE, TRUE, Quiet, 0);
+		conn->hDevice = OpenCOMPort(NULL, PortNum, Speed, TRUE, TRUE, Quiet, 0);
 	}
 	else
-		conn->hDevice = OpenCOMPort((VOID *)Port, Speed, TRUE, TRUE, Quiet, 0);
+		conn->hDevice = OpenCOMPort(Port, -1, Speed, TRUE, TRUE, Quiet, 0);
 
 	if (conn->hDevice == 0)
 	{
@@ -1918,7 +1918,7 @@ OpenCOMMPort(struct TNCINFO * conn, char * Port, int Speed, BOOL Quiet)
 
 #ifdef WIN32
 
-HANDLE OpenCOMPort(VOID * pPort, int speed, BOOL SetDTR, BOOL SetRTS, BOOL Quiet, int Stopbits)
+HANDLE OpenCOMPort(char *portname, int portnum, int speed, BOOL SetDTR, BOOL SetRTS, BOOL Quiet, int Stopbits)
 {
 	char szPort[80];
 	BOOL fRetVal ;
@@ -1930,17 +1930,17 @@ HANDLE OpenCOMPort(VOID * pPort, int speed, BOOL SetDTR, BOOL SetRTS, BOOL Quiet
 
 	// if Port Name starts COM, convert to \\.\COM or ports above 10 wont work
 
-	if ((UINT)pPort < 256)			// just a com port number
+	if (portnum != -1)			// just a com port number
 		sprintf( szPort, "\\\\.\\COM%d", pPort);
 
-	else if (_memicmp(pPort, "COM", 3) == 0)
+	else if (_memicmp(portname, "COM", 3) == 0)
 	{
 		char * pp = (char *)pPort;
 		int p = atoi(&pp[3]);
 		sprintf( szPort, "\\\\.\\COM%d", p);
 	}
 	else
-		strcpy(szPort, pPort);
+		strcpy(szPort, portname);
 
 	// open COMM device
 
@@ -2149,7 +2149,7 @@ static struct speed_struct
 };
 
 
-HANDLE OpenCOMPort(VOID * pPort, int speed, BOOL SetDTR, BOOL SetRTS, BOOL Quiet, int Stopbits)
+HANDLE OpenCOMPort(char *portname, int portnum, int speed, BOOL SetDTR, BOOL SetRTS, BOOL Quiet, int Stopbits)
 {
 	char Port[256];
 	char buf[100];
@@ -2165,10 +2165,10 @@ HANDLE OpenCOMPort(VOID * pPort, int speed, BOOL SetDTR, BOOL SetRTS, BOOL Quiet
 	// As Serial ports under linux can have all sorts of odd names, the code assumes that
 	// they are symlinked to a com1-com255 in the BPQ Directory (normally the one it is started from
 
-	if ((UINT)pPort < 256)
-		sprintf(Port, "%s/com%d", BPQDirectory, (int)pPort);
+	if (portnum != -1)
+		sprintf(Port, "%s/com%d", BPQDirectory, portnum);
 	else
-		strcpy(Port, pPort);
+		strcpy(Port, portname);
 
 	if ((fd = open(Port, O_RDWR | O_NDELAY)) == -1)
 	{

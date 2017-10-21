@@ -1147,9 +1147,9 @@ DllExport BOOL APIENTRY Rig_Init()
 		if (PORT->PTTIOBASE[0])		// Using separare port for PTT?
 		{
 			if (PORT->PTTIOBASE[3] == '=')
-				PORT->hPTTDevice = OpenCOMPort(&PORT->PTTIOBASE[4], PORT->SPEED, FALSE, FALSE, FALSE, 0);
+				PORT->hPTTDevice = OpenCOMPort(&PORT->PTTIOBASE[4], -1, PORT->SPEED, FALSE, FALSE, FALSE, 0);
 			else
-				PORT->hPTTDevice = OpenCOMPort(&PORT->PTTIOBASE[3], PORT->SPEED, FALSE, FALSE, FALSE, 0);
+				PORT->hPTTDevice = OpenCOMPort(&PORT->PTTIOBASE[3], -1, PORT->SPEED, FALSE, FALSE, FALSE, 0);
 		}
 		else
 			PORT->hPTTDevice = PORT->hDevice;	// Use same port for PTT
@@ -1407,11 +1407,11 @@ BOOL RigCloseConnection(struct RIGPORTINFO * PORT)
 OpenRigCOMMPort(struct RIGPORTINFO * PORT, VOID * Port, int Speed)
 {
 	if (PORT->PortType == FT2000 || strcmp(PORT->Rigs[0].RigName, "FT847") == 0)		// FT2000 and similar seem to need two stop bits
-		PORT->hDevice = OpenCOMPort((VOID *)Port, Speed, FALSE, FALSE, FALSE, TWOSTOPBITS);
+		PORT->hDevice = OpenCOMPort(Port, -1, Speed, FALSE, FALSE, FALSE, TWOSTOPBITS);
 	else if (PORT->PortType == NMEA)
-		PORT->hDevice = OpenCOMPort((VOID *)Port, Speed, FALSE, FALSE, FALSE, ONESTOPBIT);
+		PORT->hDevice = OpenCOMPort(Port, -1, Speed, FALSE, FALSE, FALSE, ONESTOPBIT);
 	else
-		PORT->hDevice = OpenCOMPort((VOID *)Port, Speed, FALSE, FALSE, FALSE, TWOSTOPBITS);
+		PORT->hDevice = OpenCOMPort(Port, -1, Speed, FALSE, FALSE, FALSE, TWOSTOPBITS);
 
 	if (PORT->hDevice == 0)
 		return (FALSE);

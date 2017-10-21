@@ -151,7 +151,7 @@ void MySetWindowText(HWND hWnd, char * Msg);
 
 Dll int APIENTRY SessionControl(int stream, int command, int Mask);
 
-HANDLE OpenCOMPort(VOID * pPort, int speed, BOOL SetDTR, BOOL SetRTS, BOOL Quiet, int Stopbits);
+HANDLE OpenCOMPort(char *portname, int portnum, int speed, BOOL SetDTR, BOOL SetRTS, BOOL Quiet, int Stopbits);
 int ReadCOMBlock(HANDLE fd, char * Block, int MaxLength);
 BOOL WriteCOMBlock(HANDLE fd, char * Block, int BytesToWrite);
 VOID CloseCOMPort(HANDLE fd);

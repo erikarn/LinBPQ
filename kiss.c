@@ -441,9 +441,9 @@ HANDLE OpenConnection(struct PORTCONTROL * PortVector, int port)
 		return 0;
 
 	if (PortVector->SerialPortName)
-		ComDev = OpenCOMPort(PortVector->SerialPortName, npKISSINFO->dwBaudRate, TRUE, TRUE, FALSE, 0);
+		ComDev = OpenCOMPort(PortVector->SerialPortName, -1, npKISSINFO->dwBaudRate, TRUE, TRUE, FALSE, 0);
 	else
-		ComDev = OpenCOMPort((VOID *)port, npKISSINFO->dwBaudRate, TRUE, TRUE, FALSE, 0);
+		ComDev = OpenCOMPort(NULL, port, npKISSINFO->dwBaudRate, TRUE, TRUE, FALSE, 0);
 	
 	if (ComDev)
 		npKISSINFO->idComDev = ComDev;

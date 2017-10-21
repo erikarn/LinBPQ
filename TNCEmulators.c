@@ -1392,9 +1392,9 @@ BOOL InitializeTNCEmulator()
 			// Real port
 
 			if (TNC->ComPort)
-				TNC->hDevice = OpenCOMPort((VOID *)TNC->ComPort, TNC->Speed, TRUE, TRUE, FALSE, 0);
+				TNC->hDevice = OpenCOMPort(NULL, TNC->ComPort, TNC->Speed, TRUE, TRUE, FALSE, 0);
 			else
-				TNC->hDevice = OpenCOMPort(TNC->PORTNAME, TNC->Speed, TRUE, TRUE, FALSE, 0);
+				TNC->hDevice = OpenCOMPort(TNC->PORTNAME, -1, TNC->Speed, TRUE, TRUE, FALSE, 0);
 
 			TNC->PortEnabled = 1;   
 
