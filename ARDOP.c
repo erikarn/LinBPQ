@@ -44,6 +44,7 @@ int (WINAPI FAR *EnumProcessesPtr)();
 
 #include "tncinfo.h"
 
+#include "ExtInit.h"
 
 #define WSA_ACCEPT WM_USER + 1
 #define WSA_DATA WM_USER + 2
