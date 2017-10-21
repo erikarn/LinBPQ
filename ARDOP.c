@@ -190,7 +190,8 @@ BOOL checkcrc16(unsigned char * Data, unsigned short length)
 	return FALSE;
 }
 
-static ProcessLine(char * buf, int Port)
+static int
+ProcessLine(char * buf, int Port)
 {
 	UCHAR * ptr,* p_cmd;
 	char * p_ipad = 0;
