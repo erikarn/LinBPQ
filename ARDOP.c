@@ -1376,7 +1376,8 @@ static int WebProc(struct TNCINFO * TNC, char * Buff, BOOL LOCAL)
 }
 
 
-UINT ARDOPExtInit(EXTPORTDATA * PortEntry)
+void *
+ARDOPExtInit(EXTPORTDATA * PortEntry)
 {
 	int i, port;
 	char Msg[255];
@@ -1406,7 +1407,7 @@ UINT ARDOPExtInit(EXTPORTDATA * PortEntry)
 		sprintf(Msg," ** Error - no info in BPQ32.cfg for this port\n");
 		WritetoConsole(Msg);
 
-		return (int) ExtProc;
+		return ExtProc;
 	}
 
 	TNC->Port = port;
@@ -1596,7 +1597,7 @@ UINT ARDOPExtInit(EXTPORTDATA * PortEntry)
 
 	time(&TNC->lasttime);			// Get initial time value
 
-	return ((int) ExtProc);
+	return (ExtProc);
 }
 
 int ConnecttoARDOP(int port)

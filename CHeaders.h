@@ -18,7 +18,7 @@ int WritetoConsoleLocal(char * buff);
 VOID Consoleprintf(const char * format, ...);
 VOID FreeConfig();
 
-UINT InitializeExtDriver(PEXTPORTDATA PORTVEC);
+void * InitializeExtDriver(PEXTPORTDATA PORTVEC);
 
 VOID PutLengthinBuffer(UCHAR * buff, int datalen);			// Neded for arm5 portability
 int GetLengthfromBuffer(UCHAR * buff);	

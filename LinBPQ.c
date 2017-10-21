@@ -1192,26 +1192,28 @@ UINT SoundModemExtInit(EXTPORTDATA * PortEntry);
 UINT V4ExtInit(EXTPORTDATA * PortEntry);
 UINT BaycomExtInit(EXTPORTDATA * PortEntry);
 */
-UINT AEAExtInit(struct PORTCONTROL *  PortEntry);
-UINT MPSKExtInit(EXTPORTDATA * PortEntry);
-UINT HALExtInit(struct PORTCONTROL *  PortEntry);
 
-UINT AGWExtInit(struct PORTCONTROL *  PortEntry);
-UINT KAMExtInit(struct PORTCONTROL *  PortEntry);
-UINT WinmorExtInit(EXTPORTDATA * PortEntry);
-UINT SCSExtInit(struct PORTCONTROL *  PortEntry);
-UINT TrackerExtInit(EXTPORTDATA * PortEntry);
-UINT TrackerMExtInit(EXTPORTDATA * PortEntry);
+void * AEAExtInit(struct PORTCONTROL *  PortEntry);
+void * MPSKExtInit(EXTPORTDATA * PortEntry);
+void * HALExtInit(struct PORTCONTROL *  PortEntry);
 
-UINT TelnetExtInit(EXTPORTDATA * PortEntry);
-UINT UZ7HOExtInit(EXTPORTDATA * PortEntry);
-UINT FLDigiExtInit(EXTPORTDATA * PortEntry);
-UINT ETHERExtInit(struct PORTCONTROL *  PortEntry);
-UINT AXIPExtInit(struct PORTCONTROL *  PortEntry);
-UINT ARDOPExtInit(EXTPORTDATA * PortEntry);
-UINT DragonExtInit(EXTPORTDATA * PortEntry);
+void * AGWExtInit(struct PORTCONTROL *  PortEntry);
+void * KAMExtInit(struct PORTCONTROL *  PortEntry);
+void * WinmorExtInit(EXTPORTDATA * PortEntry);
+void * SCSExtInit(struct PORTCONTROL *  PortEntry);
+void * TrackerExtInit(EXTPORTDATA * PortEntry);
+void * TrackerMExtInit(EXTPORTDATA * PortEntry);
 
-UINT InitializeExtDriver(PEXTPORTDATA PORTVEC)
+void * TelnetExtInit(EXTPORTDATA * PortEntry);
+void * UZ7HOExtInit(EXTPORTDATA * PortEntry);
+void * FLDigiExtInit(EXTPORTDATA * PortEntry);
+void * ETHERExtInit(struct PORTCONTROL *  PortEntry);
+void * AXIPExtInit(struct PORTCONTROL *  PortEntry);
+void * ARDOPExtInit(EXTPORTDATA * PortEntry);
+void * DragonExtInit(EXTPORTDATA * PortEntry);
+
+void *
+InitializeExtDriver(PEXTPORTDATA PORTVEC)
 {
 	// Only works with built in drivers
 
@@ -1222,65 +1224,65 @@ UINT InitializeExtDriver(PEXTPORTDATA PORTVEC)
 	_strupr(Value);
 
 	if (strstr(Value, "BPQETHER"))
-		return (UINT) ETHERExtInit;
+		return ETHERExtInit;
 
 	if (strstr(Value, "BPQAXIP"))
-		return (UINT) AXIPExtInit;
+		return AXIPExtInit;
 
 	if (strstr(Value, "BPQTOAGW"))
-		return (UINT) AGWExtInit;
+		return AGWExtInit;
 
 	if (strstr(Value, "AEAPACTOR"))
-		return (UINT) AEAExtInit;
+		return AEAExtInit;
 
 	if (strstr(Value, "HALDRIVER"))
-		return (UINT) HALExtInit;
+		return HALExtInit;
 /*
 	if (strstr(Value, "BPQVKISS"))
-		return (UINT) VCOMExtInit;
+		return VCOMExtInit;
 
 
 	if (strstr(Value, "V4"))
-		return (UINT) V4ExtInit;
+		return V4ExtInit;
 
 	if (strstr(Value, "SOUNDMODEM"))
-		return (UINT) SoundModemExtInit;
+		return SoundModemExtInit;
 
 	if (strstr(Value, "BAYCOM"))
-		return (UINT) BaycomExtInit;
+		return BaycomExtInit;
 */
 	if (strstr(Value, "MULTIPSK"))
-		return (UINT) MPSKExtInit;
+		return MPSKExtInit;
 
 	if (strstr(Value, "KAMPACTOR"))
-		return (UINT) KAMExtInit;
+		return KAMExtInit;
 
 	if (strstr(Value, "WINMOR"))
-		return (UINT) WinmorExtInit;
+		return WinmorExtInit;
 
 	if (strstr(Value, "SCSPACTOR"))
-		return (UINT) SCSExtInit;
+		return SCSExtInit;
 
 	if (strstr(Value, "SCSTRACKER"))
-		return (UINT) TrackerExtInit;
+		return TrackerExtInit;
 
 	if (strstr(Value, "TRKMULTI"))
-		return (UINT) TrackerMExtInit;
+		return TrackerMExtInit;
 
 	if (strstr(Value, "UZ7HO"))
-		return (UINT) UZ7HOExtInit;
+		return UZ7HOExtInit;
 
 	if (strstr(Value, "FLDIGI"))
-		return (UINT) FLDigiExtInit;
+		return FLDigiExtInit;
 
 	if (strstr(Value, "TELNET"))
-		return (UINT) TelnetExtInit;
+		return TelnetExtInit;
 
 	if (strstr(Value, "ARDOP"))
-		return (UINT) ARDOPExtInit;
+		return ARDOPExtInit;
 
 	if (strstr(Value, "DRAGON"))
-		return (UINT) DragonExtInit;
+		return DragonExtInit;
 
 	return(0);
 }
