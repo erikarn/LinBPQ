@@ -189,8 +189,6 @@ struct ipv6_header
 
 static HANDLE hInstance;
 
-//unsigned long _beginthread( void( *start_address )( void *), unsigned stack_size, char * arglist);
-
 Dll BOOL APIENTRY Init_IP();
 Dll BOOL APIENTRY Poll_IP();  
 VOID ProcessEthIPMsg(PETHMSG Buffer);

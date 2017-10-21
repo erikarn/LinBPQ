@@ -37,7 +37,7 @@ extern	int sprintf_s(char *buf, int plen, const char *fmt, ...) __attribute__((f
  * This is a wrapper around pthread_create() for non-Windows systems.
  */
 #ifndef	WIN32
-unsigned long _beginthread(void(*start_address)(void *), unsigned stack_size, void * arglist);
+void * _beginthread(void(*start_address)(void *), unsigned stack_size, void * arglist);
 #endif
 
 #ifdef WIN32

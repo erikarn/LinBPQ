@@ -74,6 +74,10 @@ int memicmp(unsigned char *a, unsigned char *b, int n)
    }
    return 0;
 }
+
+/* XXX */
+extern void Debugprintf(const char * format, ...);
+
 int stricmp(const unsigned char * pStr1, const unsigned char *pStr2)
 {
     unsigned char c1, c2;
@@ -132,7 +136,7 @@ int sprintf_s(char * string, int plen, const char * format, ...)
 
 #include <pthread.h>
 
-unsigned long _beginthread(void(*start_address)(), unsigned stack_size, VOID * arglist)
+void * _beginthread(void(*start_address)(), unsigned stack_size, VOID * arglist)
 {
 	pthread_t thread;
 

@@ -71,11 +71,8 @@ int KANTDisconnected(struct TNCDATA * conn, struct StreamInfo * channel, int Str
 VOID SendKISSData(struct TNCDATA * conn, UCHAR * txbuffer, int Len);
 VOID ProcessSCSPacket(struct TNCDATA * conn, UCHAR * rxbuffer, int Length);
 VOID TNCPoll();
-unsigned long _beginthread( void( *start_address )(), unsigned stack_size, void * arglist);
 VOID DisableAppl(struct TNCDATA * TNC);
 int BPQSerialSetPollDelay(HANDLE hDevice, int PollDelay);
-
-
 
 #define TNCBUFFLEN 1024
 

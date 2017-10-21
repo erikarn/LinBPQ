@@ -1515,7 +1515,7 @@ i2cPoll(struct PORTCONTROL * PORT, NPASYINFO npKISSINFO)
 
 // UZ7HO KISS Over TCP Routines
 
-VOID ConnecttoUZ7HOTCPThread(NPASYINFO ASY);
+static void ConnecttoUZ7HOTCPThread(void *arg);
 
 int ConnecttoUZ7HOTCP(NPASYINFO ASY)
 {
@@ -1524,8 +1524,10 @@ int ConnecttoUZ7HOTCP(NPASYINFO ASY)
 	return 0;
 }
 
-VOID ConnecttoUZ7HOTCPThread(NPASYINFO ASY)
+static void
+ConnecttoUZ7HOTCPThread(void *arg)
 {
+	NPASYINFO ASY = (void *) arg;
 	char Msg[255];
 	int err,i;
 	u_long param=1;

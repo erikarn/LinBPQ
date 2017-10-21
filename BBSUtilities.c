@@ -47,10 +47,6 @@ BOOL OpenMon;
 #define BBSIDLETIME 900
 #define USERIDLETIME 900
 
-unsigned long _beginthread( void( *start_address )(VOID * DParam),
-				unsigned stack_size, VOID * DParam);
-
-
 int APIENTRY GetRaw(int stream, char * msg, int * len, int * count);
 void GetSemaphore(struct SEM * Semaphore, int ID);
 void FreeSemaphore(struct SEM * Semaphore);
