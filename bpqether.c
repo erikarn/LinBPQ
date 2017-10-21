@@ -275,7 +275,8 @@ int ExtProc(int fn, int port,unsigned char * buff)
 }
 
 
-UINT ETHERExtInit(struct PORTCONTROL *  PortEntry)
+void *
+ETHERExtInit(struct PORTCONTROL *  PortEntry)
 {
 	//	Can have multiple ports, each mapping to a different Ethernet Adapter
 	
@@ -285,10 +286,11 @@ UINT ETHERExtInit(struct PORTCONTROL *  PortEntry)
 	if (InitPCAP())
 		OpenPCAP(PortEntry->IOBASE, PortEntry->PORTNUMBER);
 	
-	return ((int) ExtProc);
+	return ExtProc;
 }
 
 
+int
 InitPCAP()
 {
 	char Msg[255];
@@ -493,7 +495,8 @@ static BOOL ReadConfigFile(int Port)
 }
 
 
-static ProcessLine(char * buf, int Port, BOOL CheckPort)
+static int
+ProcessLine(char * buf, int Port, BOOL CheckPort)
 {
 	char * ptr;
 	char * p_port;

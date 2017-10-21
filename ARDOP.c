@@ -27,6 +27,11 @@ along with LinBPQ/BPQ32.  If not, see http://www.gnu.org/licenses
 #include <stdio.h>
 #include <time.h>
 
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+
 #include "CHeaders.h"
 
 #ifdef WIN32

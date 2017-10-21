@@ -32,6 +32,11 @@ along with LinBPQ/BPQ32.  If not, see http://www.gnu.org/licenses
 #include <stdio.h>
 #include <time.h>
 
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+
 #include "CHeaders.h"
 #include "tncinfo.h"
 
@@ -47,7 +52,6 @@ along with LinBPQ/BPQ32.  If not, see http://www.gnu.org/licenses
 #define TIMESTAMP 352
 
 #define CONTIMEOUT 1200
-
 
 
 #define AGWHDDRLEN sizeof(struct AGWHEADER)
@@ -68,7 +72,7 @@ int Update_MH_List(struct in_addr ipad, char * call, char proto);
 
 int ConnecttoUZ7HO();
 static int ProcessReceivedData(int bpqport);
-static ProcessLine(char * buf, int Port);
+static int ProcessLine(char * buf, int Port);
 int static KillTNC(struct TNCINFO * TNC);
 int static RestartTNC(struct TNCINFO * TNC);
 VOID ProcessAGWPacket(struct TNCINFO * TNC, UCHAR * Message);
@@ -902,7 +906,8 @@ static int RestartTNC(struct TNCINFO * TNC)
 }
 
 
-UINT UZ7HOExtInit(EXTPORTDATA * PortEntry)
+void *
+UZ7HOExtInit(EXTPORTDATA * PortEntry)
 {
 	int i, port;
 	char Msg[255];
@@ -929,7 +934,7 @@ UINT UZ7HOExtInit(EXTPORTDATA * PortEntry)
 		sprintf(Msg," ** Error - no info in BPQ32.cfg for this port\n");
 		WritetoConsole(Msg);
 
-		return (int) ExtProc;
+		return ExtProc;
 	}
 
 	TNC->Port = port;
@@ -995,7 +1000,7 @@ UINT UZ7HOExtInit(EXTPORTDATA * PortEntry)
 
 	time(&lasttime[port]);			// Get initial time value
 	
-	return ((int) ExtProc);
+	return ExtProc;
 
 }
 
@@ -1016,7 +1021,8 @@ UINT UZ7HOExtInit(EXTPORTDATA * PortEntry)
 */
 
 
-static ProcessLine(char * buf, int Port)
+static int
+ProcessLine(char * buf, int Port)
 {
 	UCHAR * ptr,* p_cmd;
 	char * p_ipad = 0;

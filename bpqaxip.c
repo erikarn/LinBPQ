@@ -754,7 +754,8 @@ VOID SendFrame(struct AXIPPORTINFO * PORT, struct arp_table_entry * arp_table, U
 unsigned short int compute_crc_ccitt(unsigned char *buf, int len);
 unsigned short CCCITTChecksum(unsigned char* data, unsigned int length);	
 
-UINT AXIPExtInit(struct PORTCONTROL *  PortEntry)
+void *
+AXIPExtInit(struct PORTCONTROL *  PortEntry)
 {
 //	char Msg[10] = {0xD0, 01, 00, 0x11, 00, 0x0B};
 //	unsigned short crc;
@@ -769,7 +770,7 @@ UINT AXIPExtInit(struct PORTCONTROL *  PortEntry)
 
 	WritetoConsole("\n");
 
-	return ((int) ExtProc);
+	return ExtProc;
 }
 
 InitAXIP(int Port)
@@ -2060,7 +2061,8 @@ broadcast QST-0 NODES-0
 	return FALSE;
 }
 
-static ProcessLine(char * buf, struct AXIPPORTINFO * PORT)
+static int
+ProcessLine(char * buf, struct AXIPPORTINFO * PORT)
 {
 	char * ptr;
 	char * p_call;

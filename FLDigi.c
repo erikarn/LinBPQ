@@ -33,6 +33,11 @@ int (WINAPI FAR *EnumProcessesPtr)();
 #include <stdio.h>
 #include <time.h>
 
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+
 #include "tncinfo.h"
 
 #include "bpq32.h"
@@ -77,7 +82,7 @@ int Update_MH_List(struct in_addr ipad, char * call, char proto);
 
 static int ConnecttoFLDigi();
 static int ProcessReceivedData(int bpqport);
-static ProcessLine(char * buf, int Port);
+static int ProcessLine(char * buf, int Port);
 int KillTNC(struct TNCINFO * TNC);
 static int RestartTNC(struct TNCINFO * TNC);
 VOID ProcessFLDigiPacket(struct TNCINFO * TNC, char * Message, int Len);
@@ -1085,7 +1090,8 @@ VOID SendKISSCommand(struct TNCINFO * TNC, char * Msg)
 	rc = sendto(TNC->WINMORDataSock, outbuff, txlen, 0, (struct sockaddr *)&TNC->Datadestaddr, sizeof(struct sockaddr));
 }
 
-UINT FLDigiExtInit(EXTPORTDATA * PortEntry)
+void *
+FLDigiExtInit(EXTPORTDATA * PortEntry)
 {
 	int i, port;
 	char Msg[255];
@@ -1114,7 +1120,7 @@ UINT FLDigiExtInit(EXTPORTDATA * PortEntry)
 		sprintf(Msg," ** Error - no info in BPQ32.cfg for this port\n");
 		WritetoConsole(Msg);
 
-		return (int) ExtProc;
+		return ExtProc;
 	}
 
 	TNC->Port = port;
@@ -1275,12 +1281,13 @@ UINT FLDigiExtInit(EXTPORTDATA * PortEntry)
 	MoveWindows(TNC);
 #endif
 
-	return ((int) ExtProc);
+	return ExtProc;
 
 }
 
 
-static ProcessLine(char * buf, int Port)
+static int
+ProcessLine(char * buf, int Port)
 {
 	UCHAR * ptr,* p_cmd;
 	char * p_ipad = 0;
