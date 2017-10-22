@@ -136,7 +136,7 @@ static int ProcessLine(char * buf,int Port, BOOL CheckPort);
 static int OpenPCAP(int IOBASE, int PORTNUMBER);
 
 
-int ExtProc(int fn, int port,unsigned char * buff)
+int ExtProc(int fn, int port,unsigned char * buff, int code)
 {
 	int len,txlen=0,res;
 	char txbuff[500];

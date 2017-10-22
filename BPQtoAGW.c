@@ -80,7 +80,7 @@ along with LinBPQ/BPQ32.  If not, see http://www.gnu.org/licenses
 //int ResetExtDriver(int num);
 extern char * PortConfig[33];
 
-void ConnecttoAGWThread(int port);
+static void ConnecttoAGWThread(void *arg);
 
 VOID __cdecl Consoleprintf(const char * format, ...);
 
@@ -175,7 +175,7 @@ static fd_set errorfs;
 static struct timeval timeout;
 
 
-static int ExtProc(int fn, int port,unsigned char * buff)
+static int ExtProc(int fn, int port,unsigned char * buff, int code)
 {
 	int i,winerr;
 	int datalen;
@@ -605,18 +605,28 @@ ProcessLine(char * buf, int Port, BOOL CheckPort)
 	
 int ConnecttoAGW(int port)
 {
-	_beginthread(ConnecttoAGWThread,0,port);
+	int *portarg;
+
+	portarg = malloc(sizeof(int));
+	if (portarg == NULL)
+		perror("malloc");
+	*portarg = port;
+	_beginthread(ConnecttoAGWThread,0,portarg);
 
 	return 0;
 }
 
-VOID ConnecttoAGWThread(int port)
+VOID ConnecttoAGWThread(void *arg)
 {
+	int *portarg = arg;
+	int port = *portarg;
 	char Msg[255];
 	int err,i;
 	u_long param=1;
 	BOOL bcopt=TRUE;
 	struct hostent * HostEnt;
+
+	free(portarg);
 
 	//	Only called for the first BPQ port for a particular host/port combination
 

@@ -263,7 +263,7 @@ static void WriteLogLine(int Flags, char * Msg, int MsgLen)
 
 
 
-static int ExtProc(int fn, int port,unsigned char * buff)
+static int ExtProc(int fn, int port,unsigned char * buff, int code)
 {
 	int txlen = 0;
 	UINT * buffptr;
@@ -421,7 +421,7 @@ ok:
 
 	case 3:				// CHECK IF OK TO SEND. Also used to check if TNC is responding
 
-		Stream = (int)buff;
+		Stream = code;
 	
 		STREAM = &TNC->Streams[Stream];
 
@@ -482,7 +482,7 @@ ok:
 
 	case 6:				// Scan Interface
 
-		Param = (int)buff;
+		Param = code;
 
 		switch (Param)
 		{

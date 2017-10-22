@@ -314,7 +314,7 @@ ConfigLine:
 	return (TRUE);	
 }
 
-static int ExtProc(int fn, int port,unsigned char * buff)
+static int ExtProc(int fn, int port,unsigned char * buff, int code)
 {
 	int txlen = 0;
 	UINT * buffptr;
@@ -419,7 +419,7 @@ static int ExtProc(int fn, int port,unsigned char * buff)
 
 	case 3:				// CHECK IF OK TO SEND. Also used to check if TNC is responding
 		
-		Stream = (int)buff;
+		Stream = code;
 			
 		if (STREAM->FramesQueued  > 4)
 			return (1 | TNC->HostMode << 8);

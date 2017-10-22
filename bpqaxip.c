@@ -312,11 +312,9 @@ int addrlen = sizeof(struct sockaddr_in);
 extern unsigned short CRCTAB[];
 unsigned int AXIPInst = 0;
 
-DWORD n;
-
 struct AXIPPORTINFO * Portlist[33];
 
-int InitAXIP(int Port);
+static int InitAXIP(int Port);
 
 int CurrentResEntries;
 
@@ -344,7 +342,7 @@ VOID SaveAXIPWindowPos(int port)
 }
 
 
-static int ExtProc(int fn, int port,unsigned char * buff)
+static int ExtProc(int fn, int port,unsigned char * buff, int code)
 {
 	struct iphdr * iphdrptr;
 	int len,txlen=0,err,index,digiptr,i;
@@ -672,7 +670,7 @@ static int ExtProc(int fn, int port,unsigned char * buff)
 		FreeConfig();
 
 		ReadConfigFile(port);
-		_beginthread(OpenSockets, 0, PORT );
+		_beginthread(OpenSockets, 0, PORT);
 		ResolveDelay = 2;
 #ifndef LINBPQ
 		InvalidateRect(PORT->hResWnd,NULL,TRUE);
@@ -773,6 +771,7 @@ AXIPExtInit(struct PORTCONTROL *  PortEntry)
 	return ExtProc;
 }
 
+static int
 InitAXIP(int Port)
 {
 	struct AXIPPORTINFO * PORT;
@@ -2050,7 +2049,7 @@ broadcast QST-0 NODES-0
 
 		if (PORT->NumberofUDPPorts > MAXUDPPORTS)
 		{
-			n=sprintf(buf,"BPQAXIP - Too many UDP= lines - max is %d\n", MAXUDPPORTS);
+			sprintf(buf,"BPQAXIP - Too many UDP= lines - max is %d\n", MAXUDPPORTS);
 			WritetoConsole(buf);
 		}
 		return TRUE;
