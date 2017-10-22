@@ -579,7 +579,7 @@ VOID ARDOPChangeMYC(struct TNCINFO * TNC, char * Call)
 //	ARDOPSendCommand(TNC, "MYCALL", TRUE);
 }
 
-static int ExtProc(int fn, int port,unsigned char * buff)
+static int ExtProc(int fn, int port,unsigned char * buff, int code)
 {
 	int datalen;
 	UINT * buffptr;
@@ -1235,7 +1235,7 @@ static int ExtProc(int fn, int port,unsigned char * buff)
 
 	case 6:				// Scan Stop Interface
 
-		Param = (int)buff;
+		Param = code;
 	
 		if (Param == 1)		// Request Permission
 		{

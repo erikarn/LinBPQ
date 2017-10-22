@@ -73,7 +73,7 @@ int SemHeldByAPI;
 
 struct TNCINFO * TNCInfo[34];		// Records are Malloc'd
 
-static void ConnecttoFLDigiThread(int port);
+static void ConnecttoFLDigiThread(void *arg);
 
 void CreateMHWindow();
 int Update_MH_List(struct in_addr ipad, char * call, char proto);
@@ -165,7 +165,7 @@ static struct timeval timeout;
 int Blocksizes[10] = {0,2,4,8,16,32,64,128,256,512};
 
 
-static int ExtProc(int fn, int port,unsigned char * buff)
+static int ExtProc(int fn, int port,unsigned char * buff, int code)
 {
 	UINT * buffptr;
 	char txbuff[500];
@@ -811,7 +811,7 @@ static int ExtProc(int fn, int port,unsigned char * buff)
 
 	case 3:	
 
-		Stream = (int)buff;
+		Stream = code;
 
 		TNCOK = TNC->CONNECTED;
 
@@ -951,7 +951,8 @@ static KillTNC(struct TNCINFO * TNC)
 
 #endif
 
-static RestartTNC(struct TNCINFO * TNC)
+static int
+RestartTNC(struct TNCINFO * TNC)
 {
 	if (TNC->ProgramPath == NULL)
 		return 0;
@@ -1420,20 +1421,30 @@ ProcessLine(char * buf, int Port)
 
 static int ConnecttoFLDigi(int port)
 {
-	_beginthread(ConnecttoFLDigiThread,0,port);
+	int *portarg;
+
+	portarg = malloc(sizeof(int));
+	if (portarg == NULL)
+		perror("malloc");
+	*portarg = port;
+	_beginthread(ConnecttoFLDigiThread,0, portarg);
 
 	
 	return 0;
 }
 
-static VOID ConnecttoFLDigiThread(port)
+static VOID ConnecttoFLDigiThread(void *arg)
 {
+	int *portarg = arg;
+	int port = *portarg;
 	char Msg[255];
 	int err,i;
 	u_long param=1;
 	BOOL bcopt=TRUE;
 	struct hostent * HostEnt = NULL;
 	struct TNCINFO * TNC = TNCInfo[port];
+
+	free(portarg);
 
 	Sleep(5000);		// Allow init to complete 
 

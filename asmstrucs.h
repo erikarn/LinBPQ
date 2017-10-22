@@ -686,12 +686,16 @@ typedef struct KISSINFO
 
 // EXT Driver Mapping of HARDWAREDATA
 
+typedef int port_setup_addr_fn(void *arg);
+typedef int port_ext_addr_fn(int fn, int port, unsigned char *buff, int code);
 
 typedef struct _EXTPORTDATA
 {
 	struct PORTCONTROL PORTCONTROL	;	// REMAP HARDWARE INFO
 
-	int (FAR * PORT_EXT_ADDR) ();		// ADDR OF RESIDENT ROUTINE
+	port_setup_addr_fn * PORT_SETUP_ADDR;	/* Setup routine, called during setup */
+	port_ext_addr_fn * PORT_EXT_ADDR;		// ADDR OF RESIDENT ROUTINE
+
 	char PORT_DLL_NAME[16];	
 	UCHAR EXTRESTART;					// FLAG FOR DRIVER REINIT
 	HINSTANCE DLLhandle;

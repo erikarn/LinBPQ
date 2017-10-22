@@ -473,7 +473,7 @@ ProcessLine(char * buf, int Port)
 
 
 
-void WINMORThread(int port);
+static void WINMORThread(void *arg);
 VOID ProcessDataSocketData(int port);
 int ConnecttoWINMOR();
 static int ProcessReceivedData(struct TNCINFO * TNC);
@@ -517,7 +517,8 @@ VOID ChangeMYC(struct TNCINFO * TNC, char * Call)
 	send(TNC->WINMORSock, "MYC\r\n", 5, 0);
 }
 
-static int ExtProc(int fn, int port,unsigned char * buff)
+static int
+ExtProc(int fn, int port,unsigned char * buff, int code)
 {
 	int i,winerr;
 	int datalen;
@@ -1168,7 +1169,7 @@ static int ExtProc(int fn, int port,unsigned char * buff)
 
 	case 6:				// Scan Stop Interface
 
-		Param = (int)buff;
+		Param = code;
 	
 		if (Param == 1)		// Request Permission
 		{
@@ -1581,13 +1582,21 @@ WinmorExtInit(EXTPORTDATA * PortEntry)
 
 int ConnecttoWINMOR(int port)
 {
-	_beginthread(WINMORThread,0,port);
+	int *portarg;
+
+	portarg = malloc(sizeof(int));
+	if (portarg == NULL)
+		perror("malloc");
+	*portarg = port;
+	_beginthread(WINMORThread, 0, portarg);
 
 	return 0;
 }
 
-VOID WINMORThread(port)
+VOID WINMORThread(void *arg)
 {
+	int *portarg = arg;
+	int port = *portarg;
 	// Opens both sockets and looks for data on control socket. Data socket is polled from BG,
 	// but we need fast response to control messages for PTT porcessing
 
@@ -1600,6 +1609,8 @@ VOID WINMORThread(port)
 	fd_set readfs;
 	fd_set errorfs;
 	struct timeval timeout;
+
+	free(portarg);
 
 	if (TNC->WINMORHostName == NULL)
 		return;

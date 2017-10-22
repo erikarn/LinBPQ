@@ -241,7 +241,8 @@ VOID EncodeAndSend(struct TNCINFO * TNC, UCHAR * txbuffer, int Len);
 static int	KissEncode(UCHAR * inbuff, UCHAR * outbuff, int len);
 static int	KissDecode(UCHAR * inbuff, UCHAR * outbuff, int len);
 
-int KAMExtProc(int fn, int port,unsigned char * buff)
+static int
+KAMExtProc(int fn, int port,unsigned char * buff, int code)
 {
 	int txlen = 0;
 	UINT * buffptr;
@@ -355,7 +356,7 @@ int KAMExtProc(int fn, int port,unsigned char * buff)
 
 	case 3:				// CHECK IF OK TO SEND. Also used to check if TNC is responding
 		
-		Stream = (int)buff;
+		Stream = code;
 	
 		STREAM = &TNC->Streams[Stream];
 

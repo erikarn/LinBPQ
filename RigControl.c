@@ -75,7 +75,7 @@ BOOL RigCloseConnection(struct RIGPORTINFO * PORT);
 BOOL RigWriteCommBlock(struct RIGPORTINFO * PORT);
 BOOL DestroyTTYInfo(int port);
 void CheckRX(struct RIGPORTINFO * PORT);
-static OpenRigCOMMPort(struct RIGPORTINFO * PORT, VOID * Port, int Speed);
+static int OpenRigCOMMPort(struct RIGPORTINFO * PORT, VOID * Port, int Speed);
 VOID ICOMPoll(struct RIGPORTINFO * PORT);
 VOID ProcessFrame(struct RIGPORTINFO * PORT, UCHAR * rxbuff, int len);
 VOID ProcessICOMFrame(struct RIGPORTINFO * PORT, UCHAR * rxbuffer, int Len);
@@ -1404,6 +1404,7 @@ BOOL RigCloseConnection(struct RIGPORTINFO * PORT)
 #define TWOSTOPBITS         2
 #endif
 
+static int
 OpenRigCOMMPort(struct RIGPORTINFO * PORT, VOID * Port, int Speed)
 {
 	if (PORT->PortType == FT2000 || strcmp(PORT->Rigs[0].RigName, "FT847") == 0)		// FT2000 and similar seem to need two stop bits
@@ -1705,7 +1706,7 @@ VOID ReleasePermission(struct RIGINFO *RIG)
 	while (RIG->PortRecord[i])
 	{
 		PortRecord = RIG->PortRecord[i];
-		PortRecord->PORT_EXT_ADDR(6, PortRecord->PORTCONTROL.PORTNUMBER, 3);	// Release Perrmission
+		PortRecord->PORT_EXT_ADDR(6, PortRecord->PORTCONTROL.PORTNUMBER, NULL, 3);	// Release Perrmission
 		i++;
 	}
 }
@@ -1722,7 +1723,7 @@ GetPermissionToChange(struct RIGPORTINFO * PORT, struct RIGINFO *RIG)
 	{
 		// TNC has been asked for permission, and we are waiting respoonse
 		
-		RIG->OKtoChange = RIG->PortRecord[0]->PORT_EXT_ADDR(6, RIG->PortRecord[0]->PORTCONTROL.PORTNUMBER, 2);	// Get Ok Flag
+		RIG->OKtoChange = RIG->PortRecord[0]->PORT_EXT_ADDR(6, RIG->PortRecord[0]->PORTCONTROL.PORTNUMBER, NULL, 2);	// Get Ok Flag
 	
 		if (RIG->OKtoChange == 1)
 			goto DoChange;
@@ -1751,7 +1752,7 @@ GetPermissionToChange(struct RIGPORTINFO * PORT, struct RIGINFO *RIG)
 	else
 	{
 		if (RIG->PortRecord[0]->PORT_EXT_ADDR)
-			RIG->WaitingForPermission = RIG->PortRecord[0]->PORT_EXT_ADDR(6, RIG->PortRecord[0]->PORTCONTROL.PORTNUMBER, 1);	// Request Perrmission
+			RIG->WaitingForPermission = RIG->PortRecord[0]->PORT_EXT_ADDR(6, RIG->PortRecord[0]->PORTCONTROL.PORTNUMBER, NULL, 1);	// Request Perrmission
 				
 		// If it returns zero there is no need to wait.
 				
@@ -1771,7 +1772,7 @@ DoChange:
 	{
 		PortRecord = RIG->PortRecord[i];
 
-		if (PortRecord->PORT_EXT_ADDR(6, PortRecord->PORTCONTROL.PORTNUMBER, 1))
+		if (PortRecord->PORT_EXT_ADDR(6, PortRecord->PORTCONTROL.PORTNUMBER, NULL, 1))
 		{
 			// 1 means can't change - release all
 
@@ -1843,7 +1844,7 @@ VOID DoBandwidthandAntenna(struct RIGINFO *RIG, struct ScanEntry * ptr)
 
 			RIG->CurrentBandWidth = ptr->Bandwidth;
 
-			PortRecord->PORT_EXT_ADDR(6, PortRecord->PORTCONTROL.PORTNUMBER, ptr);
+			PortRecord->PORT_EXT_ADDR(6, PortRecord->PORTCONTROL.PORTNUMBER, (void *) ptr, 0);
 
 /*			if (ptr->Bandwidth == 'R')			// Robust Packet
 				PortRecord->PORT_EXT_ADDR(6, PortRecord->PORTCONTROL.PORTNUMBER, 6);	// Set Robust Packet
