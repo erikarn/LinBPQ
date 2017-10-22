@@ -10,6 +10,7 @@ extern UINT BaycomExtInit(EXTPORTDATA * PortEntry);
 
 extern void * AEAExtInit(struct PORTCONTROL *  PortEntry);
 extern void * MPSKExtInit(EXTPORTDATA * PortEntry);
+/* Functions below this line need to have their ExtProc method changed to take buf,code rather than the current hack */
 extern void * HALExtInit(struct PORTCONTROL *  PortEntry);
 
 extern void * AGWExtInit(struct PORTCONTROL *  PortEntry);

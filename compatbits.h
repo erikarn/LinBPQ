@@ -201,7 +201,6 @@ typedef struct tagRECT
 #endif
 #define SetDlgItemText MySetDlgItemText
 
-
 BOOL MySetDlgItemText();
 
 //BOOL MySetWindowText();

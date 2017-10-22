@@ -299,8 +299,16 @@ BOOL LINKTXCHECK()
 	return 0;
 }
 
-int Dummy()				// Dummy for missing EXT Driver
+static int
+Dummy(void *arg)				// Dummy for missing EXT Driver
 {
+	return 0;
+}
+
+static int
+Dummy2(int a1, int a2, unsigned char *a3)
+{
+
 	return 0;
 }
 
@@ -311,19 +319,21 @@ VOID EXTINIT(PEXTPORTDATA PORTVEC)
 	VOID * Routine;
 
 	PORTVEC->PORT_EXT_ADDR = Dummy;
+	PORTVEC->PORT_SETUP_ADDR = Dummy2;
 
+	/* XXX TODO: which type is actually passed in here? PORTCONTROL? EXPORTDATA? */
 	Routine = (VOID *)InitializeExtDriver(PORTVEC);
-	
+
 	if (Routine == 0)
 	{
 		WritetoConsoleLocal("Driver installation failed\n");
 		return;
 	}
-	PORTVEC->PORT_EXT_ADDR = Routine;
+	PORTVEC->PORT_SETUP_ADDR = Routine;
 
 //	ALSO CALL THE ROUTINE TO START IT UP, ESPECIALLY IF A L2 ROUTINE
 
-	Routine = (VOID *)PORTVEC->PORT_EXT_ADDR(PORTVEC);
+	Routine = (VOID *)PORTVEC->PORT_SETUP_ADDR(PORTVEC);
 
 //	Startup returns address of processing routine
 
@@ -339,7 +349,7 @@ VOID EXTTX(PEXTPORTDATA PORTVEC, MESSAGE * Buffer)
 
 	if (PORT->KISSFLAGS == 255)	// Used for BAYCOM
 	{
-		PORTVEC->PORT_EXT_ADDR(2, PORT->PORTNUMBER, Buffer);
+		PORTVEC->PORT_EXT_ADDR(2, PORT->PORTNUMBER, (void *) Buffer, 0);
 		
 		return;				// Baycom driver passes frames to trace once sent
 	}
@@ -354,7 +364,7 @@ VOID EXTTX(PEXTPORTDATA PORTVEC, MESSAGE * Buffer)
 		Buffer->Linkptr = 0;	// CLEAR FLAG FROM BUFFER
 	}
 	
-	PORTVEC->PORT_EXT_ADDR(2, PORT->PORTNUMBER, Buffer);
+	PORTVEC->PORT_EXT_ADDR(2, PORT->PORTNUMBER, (void *) Buffer, 0);
 	
 	if (PORT->PROTOCOL == 10)
 	{
@@ -384,7 +394,7 @@ Loop:
 	if (Message == NULL)
 		return;
 
-	Len = PORTVEC->PORT_EXT_ADDR(1, PORT->PORTNUMBER, Message);
+	Len = PORTVEC->PORT_EXT_ADDR(1, PORT->PORTNUMBER, (void *) Message, 0);
 	
 	if (Len == 0)
 	{
@@ -430,15 +440,15 @@ VOID EXTTIMER(PEXTPORTDATA PORTVEC)
 	if (PORTVEC->EXTRESTART)
 	{
 		PORTVEC->EXTRESTART = 0;		//CLEAR
-		PORTVEC->PORT_EXT_ADDR(4, PORTVEC->PORTCONTROL.PORTNUMBER, 0);
+		PORTVEC->PORT_EXT_ADDR(4, PORTVEC->PORTCONTROL.PORTNUMBER, NULL, 0);
 	}
 
-	PORTVEC->PORT_EXT_ADDR(7, PORTVEC->PORTCONTROL.PORTNUMBER, 0);		// Timer Routine
+	PORTVEC->PORT_EXT_ADDR(7, PORTVEC->PORTCONTROL.PORTNUMBER, NULL, 0);		// Timer Routine
 }
 
 int EXTTXCHECK(PEXTPORTDATA PORTVEC, int Chan)
 {
-	return PORTVEC->PORT_EXT_ADDR(3, PORTVEC->PORTCONTROL.PORTNUMBER, Chan);
+	return PORTVEC->PORT_EXT_ADDR(3, PORTVEC->PORTCONTROL.PORTNUMBER, 0, Chan);
 }
 
 VOID PostDataAvailable(TRANSPORTENTRY * Session)
@@ -452,7 +462,7 @@ VOID PostDataAvailable(TRANSPORTENTRY * Session)
 		{
 			if (HostSess->HOSTHANDLE)
 			{
-				PostMessage(HostSess->HOSTHANDLE, BPQMsg, HostSess->HOSTSTREAM, 2);
+				PostMessage(HostSess->HOSTHANDLE, BPQMsg, HostSess->HOSTSTREAM, NULL, 2);
 			}
 		}
 	}
