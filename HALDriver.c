@@ -335,7 +335,7 @@ static int ExtProc(int fn, int port,unsigned char * buff, int code)
 	{
 	case 1:				// poll
 
-		while (TNC->PortRecord->UI_Q)			// Release anything accidentally put on UI_Q
+		while (! Q_IS_EMPTY(&TNC->PortRecord->UI_Q))			// Release anything accidentally put on UI_Q
 		{
 			buffptr = Q_REM(&TNC->PortRecord->UI_Q);
 			ReleaseBuffer(buffptr);
@@ -357,7 +357,7 @@ static int ExtProc(int fn, int port,unsigned char * buff, int code)
 
 		//for (Stream = 0; Stream <= MaxStreams; Stream++)
 		{
-			if (STREAM->PACTORtoBPQ_Q !=0)
+			if (! Q_IS_EMPTY(&STREAM->PACTORtoBPQ_Q))
 			{
 				int datalen;
 			
@@ -829,14 +829,19 @@ VOID HALPoll(int Port)
 
 	//for (Stream = 0; Stream <= MaxStreams; Stream++)
 	{
-		if (TNC->TNCOK && STREAM->BPQtoPACTOR_Q && (STREAM->BytesTXed - STREAM->BytesAcked < 600))
+		if (TNC->TNCOK && (! Q_IS_EMPTY(&STREAM->BPQtoPACTOR_Q)) && (STREAM->BytesTXed - STREAM->BytesAcked < 600))
 		{
 			int datalen;
 			UINT * buffptr;
 			UCHAR * MsgPtr;
 			unsigned char TXMsg[500];
-			
-			buffptr = (UINT * )STREAM->BPQtoPACTOR_Q;
+
+#warning Adrian - buffptr[2] being a pointer to a message needs to be fixed! Sigh!
+
+			/* XXX TODO: adrian - did the immediately code strip the buffer from the head of the queue? */
+			/* XXX TODO: adrian - or just look at it to see if it needed to be swallowed? */
+
+			buffptr = Q_GET_HEAD(&STREAM->BPQtoPACTOR_Q);
 			datalen=buffptr[1];
 			MsgPtr = (UCHAR *)&buffptr[2];
 
@@ -847,6 +852,7 @@ VOID HALPoll(int Port)
 					TNC->SwallowSignon = FALSE;	
 					if (strstr(MsgPtr, "Connected"))	// Discard *** connected
 					{
+						buffptr = Q_REM(&STREAM->BPQtoPACTOR_Q);
 						ReleaseBuffer(buffptr);
 						STREAM->FramesQueued--;
 						return;
@@ -1093,7 +1099,7 @@ VOID ProcessHALData(struct TNCINFO * TNC)
 		if (STREAM->BytesAcked > STREAM->BytesTXed)
 			Debugprintf("Too Much Acked");
 
-		if ((STREAM->BPQtoPACTOR_Q == 0) && STREAM->BytesAcked >= STREAM->BytesTXed)
+		if (Q_IS_EMPTY(&STREAM->BPQtoPACTOR_Q) && STREAM->BytesAcked >= STREAM->BytesTXed)
 		{
 			// All sent 
 
