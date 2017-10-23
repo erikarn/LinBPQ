@@ -23,7 +23,7 @@ typedef struct _BUFFHEADER
 {
 //	BASIC LINK LEVEL HEADER BUFFER LAYOUT
 
-	struct _MESSAGE * CHAIN;
+	struct _MESSAGE * oCHAIN;
 
 	UCHAR	PORT;
 	USHORT	LENGTH;
@@ -111,24 +111,24 @@ typedef struct _ARPDATA
 {
 //       KEEP IP ADDR AT FRONT
 
-	ULONG	IPADDR;
+	uint32_t IPADDR;
 	UCHAR	HWADDR[64];				// ETHERNET/ax.25 ADDR, maybe with digis
 	BOOL	ARPVALID;				// NONZERO IF ADDRESS HAS BEEN RESOLVED
 	ULONG	ARPTIMER;
 	UCHAR	ARPINTERFACE;			// Port to use. 0= NETROM, 0xff Ethernet
 	UCHAR	ARPTYPE;				// NETROM/VC/DG/ETH
 	BOOL	LOCKED;					// Locked entry from config file
-	struct _MESSAGE * ARP_Q;		// CHAIN OF DATAGRAMS WAITING FOR RESOLUTION
+	q_head_t ARP_Q;		// CHAIN OF DATAGRAMS WAITING FOR RESOLUTION
 	struct _ROUTEENTRY * ARPROUTE;	// Route Entry for this ARP entry
  
 } ARPDATA, *PARPDATA;
 
 typedef struct _ROUTEENTRY
 {
-	ULONG	NETWORK;	// NETWORK 
-	ULONG	SUBNET;		// SUBNET MASK
-	ULONG	GATEWAY;	// GATEWAY IP ADDRESS
-	ULONG	Encap;		// Encap if a Tunnelled 44 address
+	uint32_t	NETWORK;	// NETWORK 
+	uint32_t	SUBNET;		// SUBNET MASK
+	uint32_t	GATEWAY;	// GATEWAY IP ADDRESS
+	uint32_t	Encap;		// Encap if a Tunnelled 44 address
 	int		FRAMECOUNT; // FRAMES SENT TO THIS NETWORK
 	UCHAR	TYPE;		// TYPE (NETROM/VC/DG/ETH)
 	UCHAR	METRIC;		// FOR RIP 
@@ -156,20 +156,24 @@ typedef struct _IPSTATS
 
 struct map_table_entry
 {
-	unsigned int sourceipaddr;
+	uint32_t sourceipaddr;
 	unsigned short sourceport;
-	unsigned int mappedipaddr;
+	uint32_t mappedipaddr;
 	unsigned short mappedport;
 	unsigned char hostname[64];
 	unsigned int error;
 	BOOL ResolveFlag;			// True if need to resolve name
 };
 
+/*
+ * XXX TODO: adrian - should add an ipv4 int type just so I can grep it later to
+ * replace with in_addr later..
+ */
 struct nat_table_entry
 {
-	unsigned int origipaddr;
+	uint32_t origipaddr;
 	unsigned short origport;
-	unsigned int mappedipaddr;
+	uint32_t mappedipaddr;
 	unsigned short mappedport;
 	BOOL ThisHost;				//	Needed by LinBPQ to direct host mesgs to TAP
 };

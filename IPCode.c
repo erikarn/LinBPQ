@@ -1029,16 +1029,18 @@ PollEncaploop:
 			res = GetLastError();
 	}
 
-
-	if (IPHOSTVECTORPTR->HOSTTRACEQ != 0)
+	if (! Q_IS_EMPTY(&IPHOSTVECTORPTR->HOSTTRACEQ))
 	{
 		PBUFFHEADER axmsg;
 		PBUFFHEADER savemsg;
 
-		axmsg = (PBUFFHEADER)IPHOSTVECTORPTR->HOSTTRACEQ;
+		/*
+		 * This particular exchange:
+		 * + Grabs the head item (axmsg)
+		 * + removes the entry from the top
+		 */
 
-		IPHOSTVECTORPTR->HOSTTRACEQ = axmsg->CHAIN;
-
+		axmsg = Q_REM(&IPHOSTVECTORPTR->HOSTTRACEQ);
 		savemsg=axmsg;
 
 		// Packet from AX.25
@@ -1121,10 +1123,13 @@ PollEncaploop:
 fragloop:
 				ReleaseBuffer(savemsg);
 
-				if (IPHOSTVECTORPTR->HOSTTRACEQ == 0)	goto Pollloop;		// Shouldn't happen
+				if (Q_IS_EMPTY(&IPHOSTVECTORPTR->HOSTTRACEQ))
+					goto Pollloop;		// Shouldn't happen
 
-				axmsg = (PBUFFHEADER)IPHOSTVECTORPTR->HOSTTRACEQ;
-				IPHOSTVECTORPTR->HOSTTRACEQ = axmsg->CHAIN;
+				/*
+				 * This also pulls the head item from the queue..
+				 */
+				axmsg = Q_REM(&IPHOSTVECTORPTR->HOSTTRACEQ);
 				savemsg=axmsg;
 
 				ptr = &axmsg->PID;
@@ -1722,7 +1727,7 @@ SendBack:
 			struct DATAMESSAGE * buffptr;
 			PIPMSG IPptr;
 
-			while (Arp->ARP_Q)
+			while (! Q_IS_EMPTY(&Arp->ARP_Q))
 			{
 				buffptr = Q_REM(&Arp->ARP_Q);
 				IPptr = (PIPMSG)&buffptr->L2DATA[30];
@@ -3111,7 +3116,7 @@ VOID RemoveARP(PARPDATA Arp)
 {
 	int i;
 
-	while (Arp->ARP_Q)
+	while (! Q_IS_EMPTY(&Arp->ARP_Q))
 		free(Q_REM(&Arp->ARP_Q));
 
 	for (i=0; i < NumberofARPEntries; i++)
