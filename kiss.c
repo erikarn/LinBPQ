@@ -110,7 +110,7 @@ int KISSGetTCPMessage(NPASYINFO ASY);
 
 extern struct PORTCONTROL * PORTTABLE;
 extern int	NUMBEROFPORTS;
-extern UINT TRACE_Q;
+extern q_head_t TRACE_Q;
 
 #define TICKS 10	// Ticks per sec
 
@@ -822,7 +822,7 @@ VOID KISSTX(struct KISSINFO * KISS, UINT * Buffer)
 
 	KISS = KISS->FIRSTPORT;		// ALL FRAMES GO ON SAME Q
 
-	if ((PORT->KISSFLAGS & POLLEDKISS) || KISS->KISSTX_Q || KISS->FIRSTPORT->POLLFLAG || KISS->TXACTIVE)
+	if ((PORT->KISSFLAGS & POLLEDKISS) || (! Q_IS_EMPTY(&KISS->KISSTX_Q)) || KISS->FIRSTPORT->POLLFLAG || KISS->TXACTIVE)
 	{
 		// POLLED or ALREADY SOMETHING QUEUED or POLL OUTSTANDING - MUST QUEUE
 
@@ -1124,7 +1124,7 @@ VOID KISSTIMER(struct KISSINFO * KISS)
 	{
 		// OK to Send
 
-		if (KISS->KISSTX_Q)
+		if (! Q_IS_EMPTY(&KISS->KISSTX_Q))
 		{
 			//	IF NETROM MODE AND NOT FULL DUP, CHECK DCD
 
@@ -1281,7 +1281,7 @@ SeeifMore:
 			{
 				// if Nothing queued for tx, poll again (to speed up response)
 
-				if (KISS->KISSTX_Q == 0)
+				if (Q_IS_EMPTY(&KISS->KISSTX_Q))
 				{
 					struct KISSINFO * POLLTHISONE;
 
@@ -1323,7 +1323,7 @@ SeeifMore:
 
 		//	SEE IF ANYTHING QUEUED
 
-		if (KISS->KISSTX_Q)
+		if (! Q_IS_EMPTY(&KISS->KISSTX_Q))
 		{
 			KISS->POLLED = 1;			// LET TIMER DO THE SEND
 			goto SeeifMore;				// SEE IF ANYTHING ELSE
