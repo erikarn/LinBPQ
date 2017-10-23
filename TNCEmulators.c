@@ -28,6 +28,13 @@ along with LinBPQ/BPQ32.  If not, see http://www.gnu.org/licenses
 
 #include "CHeaders.h"
 
+#if defined(__FreeBSD__)
+#include <sys/types.h>
+#include <sys/ioctl.h>
+#include <termios.h>
+#include <libutil.h>
+#endif
+
 #define LF 10
 #define CR 13
 
