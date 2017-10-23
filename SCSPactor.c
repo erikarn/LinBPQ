@@ -3460,6 +3460,7 @@ typedef struct _MESSAGEY
 
 	};
 
+#warning TODO; find this and other padding based on pointer and time_t sizes and evaluate!
 	UCHAR Padding[BUFFLEN - sizeof(time_t) - sizeof(VOID *) - 256 - 7 - 16];
 
 	time_t Timestamp;
