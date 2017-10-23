@@ -127,8 +127,8 @@ static struct AGWHEADER RXHeader;
 
 static int AGWChannel[MAXBPQPORTS+1];			// BPQ Port to AGW Port
 static int BPQPort[MAXAGWPORTS][MAXBPQPORTS+1];	// AGW Port and Connection to BPQ Port
-static int AGWtoBPQ_Q[MAXBPQPORTS+1];			// Frames for BPQ, indexed by BPQ Port
-static int BPQtoAGW_Q[MAXBPQPORTS+1];			// Frames for AGW. indexed by AGW port. Only used it TCP session is blocked
+static q_head_t AGWtoBPQ_Q[MAXBPQPORTS+1];			// Frames for BPQ, indexed by BPQ Port
+static q_head_t BPQtoAGW_Q[MAXBPQPORTS+1];			// Frames for AGW. indexed by AGW port. Only used it TCP session is blocked
 
 //	Each port may be on a different machine. We only open one connection to each AGW instance
 
@@ -213,7 +213,8 @@ static int ExtProc(int fn, int port,unsigned char * buff, int code)
 	
 			FD_ZERO(&writefs);
 
-			if (BPQtoAGW_Q[port]) FD_SET(sock,&writefs);	// Need notification of busy clearing
+			if (! Q_IS_EMPTY(&BPQtoAGW_Q[port]))
+				FD_SET(sock,&writefs);	// Need notification of busy clearing
 
 			FD_ZERO(&errorfs);
 		
@@ -234,7 +235,7 @@ static int ExtProc(int fn, int port,unsigned char * buff, int code)
 
 				if (FD_ISSET(sock, &writefs))
 				{
-					if (BPQtoAGW_Q[port] == 0)
+					if (Q_IS_EMPTY(&BPQtoAGW_Q[port]))
 					{
 					}
 					else
@@ -266,7 +267,7 @@ static int ExtProc(int fn, int port,unsigned char * buff, int code)
 
 		// See if any frames for this port
 
-		if (AGWtoBPQ_Q[port] !=0)
+		if (! Q_IS_EMPTY(&AGWtoBPQ_Q[port]))
 		{
 			buffptr=Q_REM(&AGWtoBPQ_Q[port]);
 
@@ -296,7 +297,7 @@ static int ExtProc(int fn, int port,unsigned char * buff, int code)
 		
 		if (!CONNECTED[MasterPort[port]]) return 0;		// Don't try if not connected
 
-		if (BPQtoAGW_Q[MasterPort[port]]) return 0;		// Socket is blocked - just drop packets
+		if (! Q_IS_EMPTY(&BPQtoAGW_Q[MasterPort[port]])) return 0;		// Socket is blocked - just drop packets
 														// till it clears
 
 		// AGW has a control byte on front, so only subtract 6 from BPQ length
