@@ -6,3 +6,5 @@
 * CMDX ; CMDFLAG should be split in two (ptr, val)
 
 * Look at what queues into BPQtoPACTOR_Q; MsgPtr as buffptr[2] needs to be .. "fixed".
+
+* look at all the buffer "pointer" stuff for link pointers and how totally bogus they are
