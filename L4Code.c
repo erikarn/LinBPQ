@@ -39,7 +39,6 @@ extern BPQVECSTRUC BPQHOSTVECTOR[];
 
 VOID CLOSECURRENTSESSION(TRANSPORTENTRY * Session);
 VOID SENDL4DISC(TRANSPORTENTRY * Session);
-int C_Q_COUNT(VOID * Q);
 TRANSPORTENTRY * SetupSessionForL2(struct _LINKTABLE * LINK);
 VOID InformPartner(struct _LINKTABLE * LINK);
 VOID IFRM150(TRANSPORTENTRY * Session, PDATAMESSAGE Buffer);
@@ -503,7 +502,7 @@ VOID L4BG()
 			L4++;
 			continue;
 		}
-		while (L4->L4TX_Q)	
+		while (! Q_IS_EMPTY(&L4->L4TX_Q))
 		{
 			if (L4->L4CIRCUITTYPE & BPQHOST)
 				break;							// Leave on TXQ
@@ -588,7 +587,7 @@ VOID L4BG()
 		// if nothing on TX Queue If there is stuff on hold queue, timer must be running
 
 //		if (L4->L4TX_Q == 0 && L4->L4HOLD_Q)
-		if (L4->L4HOLD_Q)
+		if (! Q_IS_EMPTY(&L4->L4HOLD_Q))
 		{
 			if (L4->L4TIMER == 0)
 			{
@@ -598,7 +597,7 @@ VOID L4BG()
 		
 		// now check for rxed frames
 
-		while(L4->L4RX_Q)
+		while (! Q_IS_EMPTY(&L4->L4RX_Q))
 		{
 			Msg = Q_REM(&L4->L4RX_Q);
 
@@ -623,22 +622,23 @@ VOID CLEARSESSIONENTRY(TRANSPORTENTRY * Session)
 
 	//	RETURN ANY QUEUED BUFFERS TO FREE QUEUE
 
-	while (Session->L4TX_Q)
+	while (! Q_IS_EMPTY(&Session->L4TX_Q))
 		ReleaseBuffer(Q_REM(&Session->L4TX_Q));
 
-	while (Session->L4RX_Q)
+	while (! Q_IS_EMPTY(&Session->L4RX_Q))
 		ReleaseBuffer(Q_REM(&Session->L4RX_Q));
 
-	while (Session->L4HOLD_Q)
+	while (! Q_IS_EMPTY(&Session->L4HOLD_Q))
 		ReleaseBuffer(Q_REM(&Session->L4HOLD_Q));
 
 	if (C_Q_COUNT(&Session->L4RESEQ_Q) > Session->L4WINDOW)
 	{
 		Debugprintf("Corrupt RESEQ_Q Q Len %d Free Buffs %d", C_Q_COUNT(&Session->L4RESEQ_Q), QCOUNT);
-		Session->L4RESEQ_Q = 0;
+		/* XXX TODO: adrian - this needs to be properly purged, not /this/ */
+		//Session->L4RESEQ_Q = 0;
 	}
 
-	while (Session->L4RESEQ_Q)
+	while (! Q_IS_EMPTY(&Session->L4RESEQ_Q))
 		ReleaseBuffer(Q_REM(&Session->L4RESEQ_Q));
 
 	memset(Session, 0, sizeof(TRANSPORTENTRY));
@@ -700,7 +700,7 @@ VOID CLOSECURRENTSESSION(TRANSPORTENTRY * Session)
 
 		// If any data is queued, move it to the port entry, so it can be sent before the disconnect
 		
-		while (Session->L4TX_Q)
+		while (! Q_IS_EMPTY(&Session->L4TX_Q))
 		{
 			Buffer = Q_REM(&Session->L4TX_Q);
 			EXTPORT->PORTCONTROL.PORTTXROUTINE(EXTPORT, Buffer);
@@ -716,7 +716,7 @@ VOID CLOSECURRENTSESSION(TRANSPORTENTRY * Session)
 	{
 		//	L4 SESSION TO CLOSE
 
-		if (Session->L4HOLD_Q || Session->L4TX_Q)	// WAITING FOR ACK or MORE TO SEND - SEND DISC LATER
+		if ((! Q_IS_EMPTY(&Session->L4HOLD_Q)) || (! Q_IS_EMPTY(&Session->L4TX_Q)))	// WAITING FOR ACK or MORE TO SEND - SEND DISC LATER
 		{
 			Session->FLAGS |= DISCPENDING;			// SEND DISC WHEN ALL DATA ACKED
 			return;
@@ -738,7 +738,7 @@ VOID CLOSECURRENTSESSION(TRANSPORTENTRY * Session)
 		return;
 	}
 
-	while (Session->L4TX_Q)
+	while (! Q_IS_EMPTY(&Session->L4TX_Q))
 	{
 		Buffer = Q_REM(&Session->L4TX_Q);
 		C_Q_ADD(&LINK->TX_Q, Buffer);
@@ -748,7 +748,7 @@ VOID CLOSECURRENTSESSION(TRANSPORTENTRY * Session)
 	
 	LINK->CIRCUITPOINTER = NULL;	// CLEAR REVERSE LINK
 
-	if ((LINK->LINKWS != LINK->LINKNS) || LINK->TX_Q)
+	if ((LINK->LINKWS != LINK->LINKNS) || (! Q_IS_EMPTY(&LINK->TX_Q)))
 	{
 		// STILL MORE TO SEND - SEND DISC LATER
 		
@@ -918,7 +918,7 @@ VOID L4TIMEOUT(TRANSPORTENTRY * L4)
 
 	L4->FLAGS &= 0x7F;				// CLEAR CHOKED
 
-	Msg = L4->L4HOLD_Q;
+	Msg = Q_GET_HEAD(&L4->L4HOLD_Q);
 
 	while (Msg)
 	{ 
@@ -1565,7 +1565,7 @@ VOID FRAMEFORUS(struct _LINKTABLE * LINK, L3MESSAGEBUFFER * L3MSG, int ApplMask)
 	UCHAR * ptr1;
 	int FramesMissing;
 	L3MESSAGEBUFFER * Saved;
-	L3MESSAGEBUFFER ** Prev;
+	q_entry_t *cur;
 	char Call[10];
 
 	L4FRAMESRX++;
@@ -1770,14 +1770,14 @@ VOID FRAMEFORUS(struct _LINKTABLE * LINK, L3MESSAGEBUFFER * L3MSG, int ApplMask)
 			SENDL4IACK(L4);			// SEND DATA ACK COMMAND TO ACK OUTSTANDING FRAMES
 	
 			//	SEE IF WE ALREADY HAVE A COPY OF THIS ONE
-
-			Saved = L4->L4RESEQ_Q;
+			cur = L4->L4RESEQ_Q.head;
 
 			Call[ConvFromAX25(L3MSG->L3SRCE, Call)] = 0;
 			Debugprintf("saving seq %d from %s", L3MSG->L4TXNO, Call);
 
-			while (Saved)
+			while (cur != NULL)
 			{
+				Saved = cur->ptr;
 				if (Saved->L4TXNO == L3MSG->L4TXNO)
 				{
 					//	ALREADY HAVE A COPY - DISCARD IT
@@ -1786,8 +1786,7 @@ VOID FRAMEFORUS(struct _LINKTABLE * LINK, L3MESSAGEBUFFER * L3MSG, int ApplMask)
 					ReleaseBuffer(L3MSG);
 					return;
 				}
-
-				Saved = Saved->Next;
+				cur = cur->next;
 			}
 
 			C_Q_ADD(&L4->L4RESEQ_Q, L3MSG);		// ADD TO CHAIN
@@ -1830,20 +1829,20 @@ L4INFO_OK:
 
 		// See if anything on reseq Q to process
 
-		if (L4->L4RESEQ_Q == 0)
+		if (Q_IS_EMPTY(&L4->L4RESEQ_Q))
 			return;
 
-		Prev = &L4->L4RESEQ_Q;
-		Saved = L4->L4RESEQ_Q;
-
-		while (Saved)
+		/*
+		 * Walk the list, look for a matching entry to process..
+		 */
+		cur = L4->L4RESEQ_Q.head;
+		while (cur != NULL)
 		{
+			Saved = cur->ptr;
 			if (Saved->L4TXNO == L4->RXSEQNO)		// The one we want
 			{
 				// REMOVE IT FROM QUEUE,AND PROCESS IT
-
-				*Prev = Saved->Next;		// CHAIN  NEXT IN CHAIN TO PREVIOUS
-
+				Q_REM_ENTRY(&L4->L4RESEQ_Q, cur);
 				OLDFRAMES++;			// COUNT FOR STATS
 	
 				L3MSG = Saved;
@@ -1853,8 +1852,7 @@ L4INFO_OK:
 
 			Debugprintf("Message %d %x still on Reseq Queue", Saved->L4TXNO, Saved);
 
-			Prev = &Saved;
-			Saved = Saved->Next;
+			cur = cur->next;
 		}
 
 		return;
@@ -1942,7 +1940,7 @@ VOID ACKFRAMES(L3MESSAGEBUFFER * L3MSG, TRANSPORTENTRY * L4, int NR)
 	}
 	else
 	{
-		if ((L4->FLAGS & DISCPENDING) && L4->L4TX_Q == 0)
+		if ((L4->FLAGS & DISCPENDING) && Q_IS_EMPTY(&L4->L4TX_Q))
 		{
 			// All Acked and DISC Pending, so send it
 		
@@ -1967,9 +1965,9 @@ VOID ACKFRAMES(L3MESSAGEBUFFER * L3MSG, TRANSPORTENTRY * L4, int NR)
 	{
 		//	RETRANSMIT REQUESTED MESSAGE - WILL BE FIRST ON HOLD QUEUE
 
-		Msg = L4->L4HOLD_Q;
+		Msg = Q_GET_HEAD(&L4->L4HOLD_Q);
 		
-		if (Msg == 0)
+		if (Msg == NULL)
 			return;
  
 		Copy = GetBuff();
