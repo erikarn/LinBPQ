@@ -4802,8 +4802,6 @@ VOID STARTPORT(TRANSPORTENTRY * Session, char * Bufferptr, char * CmdTail, CMDX 
 
 VOID FINDBUFFS(TRANSPORTENTRY * Session, char * Bufferptr, char * CmdTail, CMDX * CMD)
 {
-	FindLostBuffers();
-
 #ifdef WIN32
 	Bufferptr += sprintf(Bufferptr, "Lost buffer info dumped to Debugview\r");
 #else
