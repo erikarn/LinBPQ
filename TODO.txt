@@ -4,3 +4,5 @@
 * DESTLIST
 
 * CMDX ; CMDFLAG should be split in two (ptr, val)
+
+* Look at what queues into BPQtoPACTOR_Q; MsgPtr as buffptr[2] needs to be .. "fixed".
