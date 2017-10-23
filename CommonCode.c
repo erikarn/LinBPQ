@@ -95,63 +95,33 @@ int GetLengthfromBuffer(UCHAR * buff)				// Neded for arm5 portability
 #endif
 }
 
-
-BOOL CheckQHeadder(UINT * Q)
-{
-#ifdef WIN32
-	UINT Test;
-
-	__try
-	{
-		Test = *Q;
-	}
-	__except(EXCEPTION_EXECUTE_HANDLER)
-	{
-		Debugprintf("Invalid Q Header %X", Q);
-		printStack();
-		return FALSE;
-	}
-#endif
-	return TRUE;
-}
-
 // Get buffer from Queue
-
-
-#warning TODO: this whole queue management thing needs completely replacing as it assumes int/ptr sizes are the same, and commits some very bad sins!
-VOID * _Q_REM(VOID *PQ, char * File, int Line)
+VOID * _Q_REM(q_head_t *PQ, char * File, int Line)
 {
-	UINT * Q;
-	UINT * first;
-	UINT next;
+	q_entry_t *f;
+	void *p;
 
-	//	PQ may not be word aligned, so copy as bytes (for ARM5)
+	if (PQ->head == NULL)
+		return (NULL);
 
-	Q = (UINT *) PQ;
+	f = PQ->head;
+	p = f->ptr;
 
-	if (Semaphore.Flag == 0)
-		Debugprintf("Q_REM called without semaphore from %s Line %d", File, Line);
-
-	if (CheckQHeadder(Q) == 0)
-		return(0);
-
-	first = (UINT *)Q[0];
-
-	if (first == 0) return (0);			// Empty
-
-	next= first[0];						// Address of next buffer
-
-	Q[0] = next;
-
-	// Make sure guard zone is zeros
-
-	if (*(first + BUFFLEN/4) != 0)
-	{
-		Debugprintf("Q_REM %X GUARD ZONE CORRUPT %x Called from %s Line %d", first, *(first + BUFFLEN/4), File, Line);
-		printStack();
+	/* Pull it off. */
+	if (PQ->head == PQ->tail) {
+		/*If head == tail, then the list is now empty */
+		PQ->head = NULL;
+		PQ->tail = NULL;
+	} else {
+		/* head != tail, then make sure the next entry is the head */
+		PQ->head = f->next;
+		f->next->prev = NULL;
 	}
 
-	return (first);
+	/* And now that we're done with that .. */
+	free(f);
+
+	return (p);
 }
 
 void printStack(void);
@@ -165,115 +135,52 @@ UINT _ReleaseBuffer(VOID *pBUFF, char * File, int Line)
 	return 0;
 }
 
-int _C_Q_ADD(VOID *PQ, VOID *PBUFF, char * File, int Line)
+/*
+ * Add entry to the tail of the list!
+ */
+int
+_C_Q_ADD(q_head_t *PQ, VOID *PBUFF, char * File, int Line)
 {
-	UINT * Q;
-	UINT * BUFF = (UINT *)PBUFF;
-	UINT * next;
-	int n = 0;
+	q_entry_t *f;
 
-//	PQ may not be word aligned, so copy as bytes (for ARM5)
-
-	Q = (UINT *) PQ;
-
-	if (Semaphore.Flag == 0)
-		Debugprintf("C_Q_ADD called without semaphore from %s Line %d", File, Line);
-
-	if (CheckQHeadder(Q) == 0)			// Make sure Q header is readable
-		return(0);
-
-	// Make sure guard zone is zeros
-
-	if (*(BUFF + BUFFLEN/4) != 0)
-	{
-		Debugprintf("C_Q_ADD %X GUARD ZONE CORRUPT %x Called from %s Line %d", BUFF, *(BUFF + BUFFLEN/4), File, Line);
-		printStack();
-
-		return 0;
+	f = malloc(sizeof(*f));
+	if (f == NULL) {
+		perror("_C_Q_ADD: malloc");
 	}
 
-#warning yes, it uses the first uint in the buffer as the queue chain link.. sigh
+	/* Init */
+	f->prev = NULL;
+	f->next = NULL;
+	f->ptr = PBUFF;
 
-	BUFF[0]=0;							// Clear chain in new buffer
-
-	if (Q[0] == 0)						// Empty
-	{
-		Q[0]=(UINT)BUFF;				// New one on front
-		return(0);
+	/* If the list is emty, then we set it up */
+	/* Else, place it at the end, add the linkages */
+	if (PQ->head == NULL) {
+		PQ->head = PQ->tail = f;
+	} else {
+		f->prev = PQ->tail;
+		PQ->tail->next = f;
+		PQ->tail = f;
 	}
-
-	next = (UINT *)Q[0];
-
-	while (next[0]!=0)
-	{
-		next=(UINT *)next[0];			// Chain to end of queue
-	}
-	next[0]=(UINT)BUFF;					// New one on end
 
 	return(0);
 }
 
-// Non-pool version
-
-int C_Q_ADD_NP(VOID *PQ, VOID *PBUFF)
+/*
+ * XXX TODO: just put the count in the q_head_t.
+ */
+int C_Q_COUNT(q_head_t *PQ)
 {
-	UINT * Q;
-	UINT * BUFF = (UINT *)PBUFF;
-	UINT * next;
-	int n = 0;
-
-//	PQ may not be word aligned, so copy as bytes (for ARM5)
-
-	Q = (UINT *) PQ;
-
-	if (CheckQHeadder(Q) == 0)			// Make sure Q header is readable
-		return(0);
-
-	BUFF[0]=0;							// Clear chain in new buffer
-
-	if (Q[0] == 0)						// Empty
-	{
-//		Q[0]=(UINT)BUFF;				// New one on front
-		memcpy(PQ, &BUFF, 4);
-		return 0;
-	}
-	next = (UINT *)Q[0];
-
-	while (next[0]!=0)
-		next=(UINT *)next[0];			// Chain to end of queue
-
-	next[0]=(UINT)BUFF;					// New one on end
-
-	return(0);
-}
-
-
-int C_Q_COUNT(VOID *PQ)
-{
-	UINT * Q;
+	q_entry_t *f;
 	int count = 0;
 
-//	PQ may not be word aligned, so copy as bytes (for ARM5)
-
-	Q = (UINT *) PQ;
-
-	if (CheckQHeadder(Q) == 0)			// Make sure Q header is readable
-		return(0);
-
-	//	SEE HOW MANY BUFFERS ATTACHED TO Q HEADER
-
-	while (*Q)
-	{
+	f = PQ->head;
+	while (f != NULL) {
 		count++;
-		if ((count + QCOUNT) > MAXBUFFS)
-		{
-			Debugprintf("C_Q_COUNT Detected corrupt Q %p len %d", PQ, count);
-			return count;
-		}
-		Q = (UINT *)*Q;
+		f = f->next;
 	}
 
-	return count;
+	return (count);
 }
 
 /*
@@ -493,7 +400,7 @@ VOID CheckForDetach(struct TNCINFO * TNC, int Stream, struct STREAMINFO * STREAM
 				Debugprintf(logmsg);
 			}
 
-			if (STREAM->BPQtoPACTOR_Q)					// Still data to send?
+			if (! Q_IS_EMPTY(&STREAM->BPQtoPACTOR_Q))					// Still data to send?
 				return;									// Will close when all acked
 
 //			if (STREAM->FramesOutstanding && TNC->Hardware == H_UZ7HO)
@@ -520,13 +427,13 @@ NotConnected:
 
 		CloseComplete(TNC, Stream);
 
-		while(STREAM->BPQtoPACTOR_Q)
+		while(! Q_IS_EMPTY(&STREAM->BPQtoPACTOR_Q))
 		{
 			buffptr=Q_REM(&STREAM->BPQtoPACTOR_Q);
 			ReleaseBuffer(buffptr);
 		}
 
-		while(STREAM->PACTORtoBPQ_Q)
+		while(! Q_IS_EMPTY(&STREAM->PACTORtoBPQ_Q))
 		{
 			buffptr=Q_REM(&STREAM->PACTORtoBPQ_Q);
 			ReleaseBuffer(buffptr);
@@ -813,6 +720,7 @@ int CompareAlias( void *a, void *b)
 	struct DEST_LIST * y;
 	UINT * c;
 
+#warning ADRIAN yes, this should also get fixed, what the heck
 	c = a;
 	c = (UINT *)*c;
 	x = (struct DEST_LIST *)c;
@@ -1090,7 +998,7 @@ DllExport int APIENTRY DeallocateStream(int stream)
 	if (GotSem == 0)
 		GetSemaphore(&Semaphore, 0);
 
-	while (PORTVEC->HOSTTRACEQ)
+	while (! Q_IS_EMPTY(&PORTVEC->HOSTTRACEQ))
 	{
 		monbuff = Q_REM(&PORTVEC->HOSTTRACEQ);
 		ReleaseBuffer(monbuff);
@@ -1346,7 +1254,7 @@ DllExport time_t APIENTRY GetRaw(int stream, char * msg, int * len, int * count)
 
 	GetSemaphore(&Semaphore, 26);
 
-	if (SESS->HOSTTRACEQ == 0)
+	if (Q_IS_EMPTY(&SESS->HOSTTRACEQ))
 	{
 		FreeSemaphore(&Semaphore);
 		return 0;
@@ -1407,7 +1315,7 @@ DllExport int APIENTRY GetMsg(int stream, char * msg, int * len, int * count )
 
 	GetSemaphore(&Semaphore, 25);
 
-	if (L4 == 0 || L4->L4TX_Q == 0)
+	if (L4 == 0 || Q_IS_EMPTY(&L4->L4TX_Q))
 	{
 		FreeSemaphore(&Semaphore);
 		return 0;

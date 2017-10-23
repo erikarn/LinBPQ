@@ -31,15 +31,29 @@ int GetLengthfromBuffer(UCHAR * buff);
 
 #define C_Q_ADD(s, b) _C_Q_ADD(s, b, __FILE__, __LINE__)
 
-VOID * _Q_REM(VOID *Q, char * File, int Line);
+VOID * _Q_REM(q_head_t *Q, char * File, int Line);
 
-int _C_Q_ADD(VOID *Q, VOID *BUFF, char * File, int Line);
+int _C_Q_ADD(q_head_t *Q, VOID *BUFF, char * File, int Line);
+static inline int
+Q_IS_EMPTY(q_head_t *Q)
+{
+
+	return (Q->head == NULL) && (Q->tail == NULL);
+}
+
+static inline void *
+Q_GET_HEAD(q_head_t *Q)
+{
+	if (Q->head == NULL)
+		return (NULL);
+	return (Q->head->ptr);
+}
 
 UINT _ReleaseBuffer(VOID *BUFF, char * File, int Line);
 
 VOID * _GetBuff(char * File, int Line);
 
-int C_Q_COUNT(VOID *Q);
+int C_Q_COUNT(q_head_t *Q);
 
 DllExport char * APIENTRY GetApplCall(int Appl);
 DllExport char * APIENTRY GetApplAlias(int Appl);

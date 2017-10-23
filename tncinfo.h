@@ -164,8 +164,8 @@ struct STREAMINFO
 {
 //	TRANSPORTENTRY * AttachedSession;
 
-	UINT PACTORtoBPQ_Q;			// Frames for BPQ
-	UINT BPQtoPACTOR_Q;			// Frames for PACTOR
+	q_head_t PACTORtoBPQ_Q;			// Frames for BPQ
+	q_head_t BPQtoPACTOR_Q;			// Frames for PACTOR
 	int	FramesOutstanding;		// Frames Queued - used for flow control
 	int	FramesQueued;			// Frames Queued - used for flow control
 	BOOL InternalCmd;			// Last Command was generated internally
@@ -244,6 +244,7 @@ typedef struct ARQINFO
 	char OurStream;
 	char FarStream;
 
+	/* XXX TODO adrian - holy crap does THIS need to be redone! */
 	UINT * TXHOLDQ[64];			// Frames waiting ACK
 	UINT * RXHOLDQ[64];			// Frames waiting missing frames.
 
@@ -355,8 +356,8 @@ typedef struct TNCINFO
 
 	BOOL Minimized;				// Start Minimized flag
 
-	int WINMORtoBPQ_Q;			// Frames for BPQ, indexed by BPQ Port
-	int BPQtoWINMOR_Q;			// Frames for WINMOR. indexed by WINMOR port. Only used it TCP session is blocked
+	q_head_t WINMORtoBPQ_Q;			// Frames for BPQ, indexed by BPQ Port
+	q_head_t BPQtoWINMOR_Q;			// Frames for WINMOR. (not anymore bit - indexed by WINMOR port. Only used it TCP session is blocked)
 
 	SOCKET WINMORSock;			// Control Socket
 	SOCKET WINMORDataSock;		// Data Socket
@@ -480,8 +481,8 @@ typedef struct TNCINFO
 	struct STREAMINFO Streams[27];	// 0 is Pactor 1 - 10 are ax.25.
 	int LastStream;				// Last one polled for status or send
 
-	void * BPQtoRadio_Q;			// Frames to Rig Interface
-	void * RadiotoBPQ_Q;			// Frames from Rig Interface
+	q_head_t BPQtoRadio_Q;			// Frames to Rig Interface
+	q_head_t RadiotoBPQ_Q;			// Frames from Rig Interface
 
 	char * InitPtr;				// Next Command
 	int	ReinitState;			// Reinit State Machine

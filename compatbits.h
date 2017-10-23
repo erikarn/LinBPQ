@@ -23,6 +23,19 @@ Stuff to make compiling on WINDOWS and LINUX easier
 extern	void Sleep(int msec);
 #endif
 
+/* Sigh, hand rolled list management */
+struct q_entry;
+struct q_entry {
+	struct q_entry *prev, *next;
+	void *ptr;
+};
+
+struct q_head {
+	struct q_entry *head, *tail;
+};
+typedef struct q_head q_head_t;
+typedef struct q_entry q_entry_t;
+
 /*
  * sprintf_s() is a Win32 construct.
  *
