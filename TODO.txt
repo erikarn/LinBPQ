@@ -3,3 +3,4 @@
 
 * DESTLIST
 
+* CMDX ; CMDFLAG should be split in two (ptr, val)
