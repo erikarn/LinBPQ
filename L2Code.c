@@ -1694,10 +1694,10 @@ VOID PROC_I_FRAME(struct _LINKTABLE * LINK, struct PORTCONTROL * PORT, MESSAGE *
 		{
 			//	THERE IS A WHOLE MESSAGE ON FRAG_Q - PASS TO IP
 
-			while(LINK->L2FRAG_Q)
+			while(! Q_IS_EMPTY(&LINK->L2FRAG_Q))
 			{
 				Buffer = Q_REM(&LINK->L2FRAG_Q);
-				Q_IP_MSG( Buffer);
+				Q_IP_MSG(Buffer);
 			}
 		}
 		break;
@@ -1784,13 +1784,13 @@ int COUNT_AT_L2(struct _LINKTABLE * LINK)
 	if (LINK == NULL)
 		return 0;
 	
-	abovelink = C_Q_COUNT((UINT *)&LINK->TX_Q);
+	abovelink = C_Q_COUNT(&LINK->TX_Q);
 
 	//	COUNT FRAMES IN TSLOTS
 
 	while (n < 8)
 	{
-		if (LINK->FRAMES[n])
+		if (! Q_IS_EMPTY(&LINK->FRAMES[n]))
 			count++;
 		n++;
 	}
@@ -1823,9 +1823,9 @@ VOID CLEARL2QUEUES(struct _LINKTABLE * LINK)
 
 	while (n < 8)
 	{
-		while (LINK->FRAMES[n])
+		while (! Q_IS_EMPTY(&LINK->FRAMES[n]))
 			ReleaseBuffer(Q_REM(&LINK->FRAMES[n]));
-		while (LINK->RXFRAMES[n])
+		while (! Q_IS_EMPTY(&LINK->RXFRAMES[n]))
 			ReleaseBuffer(Q_REM(&LINK->RXFRAMES[n]));
 		n++;
 	}
@@ -1834,10 +1834,10 @@ VOID CLEARL2QUEUES(struct _LINKTABLE * LINK)
 	//	QUEUED ON THE TX HOLDING QUEUE, RX QUEUE AND LEVEL 3 QUEUE
 
 
-	while (LINK->TX_Q)
+	while (! Q_IS_EMPTY(&LINK->TX_Q))
 		ReleaseBuffer(Q_REM(&LINK->TX_Q));
 
-	while (LINK->RX_Q)
+	while (! Q_IS_EMPTY(&LINK->RX_Q))
 		ReleaseBuffer(Q_REM(&LINK->RX_Q));
 
 }
@@ -1935,11 +1935,11 @@ VOID SDETX(struct _LINKTABLE * LINK)
 
 	//	See if we can load any more frames into the frame holding q
 
-	while (LINK->TX_Q && LINK->FRAMES[LINK->SDTSLOT] == NULL)
+	while (! Q_IS_EMPTY(&LINK->TX_Q) && Q_IS_EMPTY(&LINK->FRAMES[LINK->SDTSLOT]))
 	{
 		Msg = Q_REM(&LINK->TX_Q);
 		Msg->CHAIN = NULL;
-		LINK->FRAMES[LINK->SDTSLOT] = Msg;
+		C_Q_ADD(&LINK->FRAMES[LINK->SDTSLOT], Msg);
 		LINK->SDTSLOT ++;
 		LINK->SDTSLOT &= 7;
 	}
@@ -1948,7 +1948,7 @@ VOID SDETX(struct _LINKTABLE * LINK)
 
 	while ((LINK->L2FLAGS & POLLSENT) == 0)
 	{
-		Msg = LINK->FRAMES[LINK->LINKNS];	// is next frame available?
+		Msg = Q_GET_HEAD(&LINK->FRAMES[LINK->LINKNS]);	// is next frame available?
 
 		if (Msg == NULL)
 			return;
@@ -1989,7 +1989,7 @@ VOID SDETX(struct _LINKTABLE * LINK)
 
 			// if at limit, or no more to send, set P)
 	
-			if (Outstanding >= LINK->LINKWINDOW || LINK->FRAMES[LINK->LINKNS] == NULL)
+			if (Outstanding >= LINK->LINKWINDOW || Q_IS_EMPTY(&LINK->FRAMES[LINK->LINKNS]))
 			{
 				CTL |= PFBIT;
 				LINK->L2FLAGS |= POLLSENT;
@@ -2224,7 +2224,7 @@ VOID ACKMSG(struct _LINKTABLE * LINK)
 	{
 		// No, so frames to ack
 
-		if (LINK->FRAMES[LINK->LINKOWS])
+		if (! Q_IS_EMPTY(&LINK->FRAMES[LINK->LINKOWS]))
 			ReleaseBuffer(Q_REM(&LINK->FRAMES[LINK->LINKOWS]));
 		else
 		{
@@ -2265,7 +2265,7 @@ VOID ACKMSG(struct _LINKTABLE * LINK)
 
 	//	IF DISCONNECT REQUEST OUTSTANDING, AND NO FRAMES ON TX QUEUE,  SEND DISC
 
-	if (LINK->L2FLAGS & DISCPENDING && LINK->TX_Q == 0)
+	if (LINK->L2FLAGS & DISCPENDING && Q_IS_EMPTY(&LINK->TX_Q))
 	{
 		LINK->L2FLAGS &=  ~DISCPENDING;
 
