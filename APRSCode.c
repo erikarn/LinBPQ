@@ -126,8 +126,8 @@ static int MinTimer = 60;
 BOOL APRSApplConnected = FALSE;  
 BOOL APRSWeb = FALSE;  
 
-UINT APPL_Q = 0;				// Queue of frames for APRS Appl
-UINT APPLTX_Q = 0;				// Queue of frames from APRS Appl
+q_head_t APPL_Q = {};				// Queue of frames for APRS Appl
+q_head_t APPLTX_Q = {};				// Queue of frames from APRS Appl
 UINT APRSPortMask = 0;
 
 char APRSCall[10] = "";
@@ -859,7 +859,7 @@ Dll VOID APIENTRY Poll_APRS()
 	if (GPSPort)
 		PollGPSIn();
 
-	if (APPLTX_Q)
+	if (! Q_IS_EMPTY(&APPLTX_Q))
 	{
 		UINT * buffptr = Q_REM(&APPLTX_Q);
 			
@@ -871,7 +871,7 @@ Dll VOID APIENTRY Poll_APRS()
 		ReleaseBuffer(buffptr);
 	}
 
-	while (APRSMONVECPTR->HOSTTRACEQ)
+	while (! Q_IS_EMPTY(&APRSMONVECPTR->HOSTTRACEQ))
 	{
 		int stamp, len;
 		BOOL MonitorNODES = FALSE;
@@ -3322,7 +3322,7 @@ Dll VOID APIENTRY APRSDisconnect()
 
 	SendFilterCommand(ISFilter);
 
-	while (APPL_Q)
+	while (! Q_IS_EMPTY(&APPL_Q))
 	{
 		buffptr = Q_REM(&APPL_Q);
 		ReleaseBuffer(buffptr);
@@ -3341,7 +3341,7 @@ Dll BOOL APIENTRY GetAPRSFrame(char * Frame, char * Call)
 
 	GetSemaphore(&Semaphore, 10);
 	{
-		if (APPL_Q)
+		if (! Q_IS_EMPTY(&APPL_Q))
 		{
 			buffptr = Q_REM(&APPL_Q);
 
