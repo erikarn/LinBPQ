@@ -137,8 +137,8 @@ static int ProcessLine(char * buf, int Port);
 // There seem to be timing issues when calling SendMessage from multiple threads.
 // Queue and process in main thread
 
-UINT * WINMORTraceQ;
-UINT * SetWindowTextQ;
+q_head_t WINMORTraceQ;
+q_head_t SetWindowTextQ;
 
 VOID WritetoTraceSupport(struct TNCINFO * TNC, char * Msg, int Len)
 {
@@ -304,6 +304,7 @@ VOID WritetoTrace(struct TNCINFO * TNC, char * Msg, int Len)
 		if (Len > 340)
 			Len = 340;
 
+#warning ... adrian: what the heck is up with this?
 		buffptr[1] = (UINT)TNC;
 		buffptr[2] = (UINT)Len;
 		memcpy(&buffptr[3], Msg, Len + 1);	
@@ -543,7 +544,7 @@ ExtProc(int fn, int port,unsigned char * buff, int code)
 	{
 	case 1:				// poll
 
-		while (TNC->PortRecord->UI_Q)			// Release anything accidentally put on UI_Q
+		while (! Q_IS_EMPTY(&TNC->PortRecord->UI_Q))			// Release anything accidentally put on UI_Q
 		{
 			buffptr = Q_REM(&TNC->PortRecord->UI_Q);
 			ReleaseBuffer(buffptr);
@@ -779,7 +780,8 @@ ExtProc(int fn, int port,unsigned char * buff, int code)
 			
 			FD_ZERO(&writefs);
 
-			if (TNC->BPQtoWINMOR_Q) FD_SET(TNC->WINMORDataSock,&writefs);	// Need notification of busy clearing
+			if (! Q_IS_EMPTY(&TNC->BPQtoWINMOR_Q))
+				FD_SET(TNC->WINMORDataSock,&writefs);	// Need notification of busy clearing
 
 			FD_ZERO(&errorfs);
 		
@@ -818,7 +820,7 @@ ExtProc(int fn, int port,unsigned char * buff, int code)
 		
 		// See if any frames for this port
 
-		if (TNC->WINMORtoBPQ_Q != 0)
+		if (! Q_IS_EMPTY(&TNC->WINMORtoBPQ_Q))
 		{
 			buffptr=Q_REM(&TNC->WINMORtoBPQ_Q);
 
@@ -856,7 +858,7 @@ ExtProc(int fn, int port,unsigned char * buff, int code)
 			return 0;		// Don't try if not connected
 		}
 
-		if (TNC->Streams[0].BPQtoPACTOR_Q)		//Used for CTEXT
+		if (! Q_IS_EMPTY(&TNC->Streams[0].BPQtoPACTOR_Q))		//Used for CTEXT
 		{
 			UINT * buffptr = Q_REM(&TNC->Streams[0].BPQtoPACTOR_Q);
 			txlen=buffptr[1];
