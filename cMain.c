@@ -121,7 +121,7 @@ int FULL_CTEXT = 1;				// CTEXT ON ALL CONNECTS IF NZ
 //NUMBEROFSTREAMS	DD	0
 
 extern VOID * ENDPOOL;
-extern UINT APPL_Q;				// Queue of frames for APRS Appl
+extern q_head_t APPL_Q;				// Queue of frames for APRS Appl
 
 
 #define BPQHOSTSTREAMS	64
@@ -168,7 +168,7 @@ VOID * ADJBUFFER = NULL;			// BASE ADJUSED FOR DIGIS
 
 UCHAR TEMPFIELD[7] = "";			// ADDRESS WORK FILED
 
-UINT TRACE_Q	= 0;				// TRANSMITTED FRAMES TO BE TRACED
+q_head_t TRACE_Q = { };				// TRANSMITTED FRAMES TO BE TRACED
 
 int RANDOM = 0;						// 'RANDOM' NUMBER FOR PERSISTENCE CALCS
  
@@ -189,7 +189,7 @@ int AUTOSAVE = 0;					// AUTO SAVE NODES ON EXIT FLAG
 int L4APPL = 1;						// Application for BBSCALL/ALIAS connects
 int CFLAG = 0;						// C =HOST Command
 
-VOID * IDMSG_Q = NULL;				// ID/BEACONS WAITING TO BE SENT
+q_head_t IDMSG_Q = { };				// ID/BEACONS WAITING TO BE SENT
 
 int	NODESINPROGRESS = 0;
 VOID * CURRENTNODE = NULL;			// NEXT _NODE TO SEND
@@ -251,7 +251,8 @@ VOID LINKTX(PEXTPORTDATA PORTVEC, UINT * Buffer)
 {
 	//	LOOP BACK TO SWITCH
 	struct _LINKTABLE * LINK;
-	
+
+#warning adrian This definitely is going to break!
 	LINK = (struct _LINKTABLE *)Buffer[(BUFFLEN-4)/4];
 
 	if (LINK)
@@ -572,8 +573,8 @@ BOOL Start()
 
 	// Reinit everything in case of restart
 
-	TRACE_Q = 0;
-	IDMSG_Q = 0;
+	bzero(&TRACE_Q, sizeof(TRACE_Q));
+	bzero(&IDMSG_Q, sizeof(TRACE_Q));
 	NUMBEROFPORTS = 0;
 	MAXBUFFS = 0;
 	QCOUNT = 0;
@@ -1694,7 +1695,7 @@ VOID TIMERINTERRUPT()
 	while (Buffer)
 	{
 		//	IF BUFFER HAS A LINK TABLE ENTRY ON END, RESET TIMEOUT
-
+#warning adrian This definitely is going to break!
 		LINK = (struct _LINKTABLE *)Buffer[(BUFFLEN-4)/4];
 
 		if (LINK)
@@ -1830,12 +1831,14 @@ VOID TIMERINTERRUPT()
 
 		// End of RX_Q
 
-		while (PORT->PORTTX_Q)
+		while (! Q_IS_EMPTY(&PORT->PORTTX_Q))
 		{
 			int ret;
-			UINT PACTORSAVEQ;
+			q_head_t PACTORSAVEQ;
 
-			Buffer = (UINT *)PORT->PORTTX_Q;
+			bzero(&PACTORSAVEQ, sizeof(PACTORSAVEQ));
+
+			Buffer = Q_GET_HEAD(&PORT->PORTTX_Q);
 			Message = (struct _MESSAGE *) Buffer;
 			
 			ret = PORT->PORTTXCHECKCODE(PORT, Message->PORT);
@@ -1868,12 +1871,11 @@ VOID TIMERINTERRUPT()
 				break;					// BUSY
 		
 			//	Try passing any other messages on the queue to the node.
-
-			PACTORSAVEQ = 0;	
+			bzero(&PACTORSAVEQ, sizeof(PACTORSAVEQ));
 
 PACTORLOOP:
 
-			Buffer = (UINT *)PORT->PORTTX_Q;
+			Buffer = Q_GET_HEAD(&PORT->PORTTX_Q);
 
 			if (Buffer == NULL)
 				goto ENDOFLIST;
@@ -1908,7 +1910,7 @@ PACTORLOOP:
 
 ENDOFLIST:
 			//	Move the saved frames back onto Port Q
-
+			/* XXX TODO: adrian - methodize this? */
 			PORT->PORTTX_Q = PACTORSAVEQ;
 			break;
 		}

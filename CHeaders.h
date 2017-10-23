@@ -281,7 +281,7 @@ extern int CTEXTLEN;
 extern UCHAR MYALIAS[7];				// ALIAS IN AX25 FORM
 extern UCHAR BBSALIAS[7];
 
-extern UINT TRACE_Q;				// TRANSMITTED FRAMES TO BE TRACED
+extern q_head_t TRACE_Q;				// TRANSMITTED FRAMES TO BE TRACED
 
 extern char HEADERCHAR;				// CHAR FOR _NODE HEADER MSGS
 
@@ -289,7 +289,7 @@ extern int AUTOSAVE;				// AUTO SAVE NODES ON EXIT FLAG
 extern int L4APPL;					// Application for BBSCALL/ALIAS connects
 extern int CFLAG;					// C =HOST Command
 
-extern VOID * IDMSG_Q;				// ID/BEACONS WAITING TO BE SENT
+extern q_head_t IDMSG_Q;				// ID/BEACONS WAITING TO BE SENT
 
 extern struct DATAMESSAGE BTHDDR;
 extern struct _MESSAGE IDHDDR;
