@@ -93,8 +93,8 @@ extern UCHAR BPQDirectory[];
 
 static int MPSKChannel[MAXBPQPORTS+1];			// BPQ Port to MPSK Port
 static int BPQPort[MAXMPSKPORTS][MAXBPQPORTS+1];	// MPSK Port and Connection to BPQ Port
-static int MPSKtoBPQ_Q[MAXBPQPORTS+1];			// Frames for BPQ, indexed by BPQ Port
-static int BPQtoMPSK_Q[MAXBPQPORTS+1];			// Frames for MPSK. indexed by MPSK port. Only used it TCP session is blocked
+static q_head_t MPSKtoBPQ_Q[MAXBPQPORTS+1];			// Frames for BPQ, indexed by BPQ Port
+static q_head_t BPQtoMPSK_Q[MAXBPQPORTS+1];			// Frames for MPSK. indexed by MPSK port. Only used it TCP session is blocked
 
 static int MasterPort[MAXBPQPORTS+1];			// Pointer to first BPQ port for a specific MPSK host
 
@@ -235,11 +235,11 @@ static int ExtProc(int fn, int port,unsigned char * buff, int code)
 			
 			FD_ZERO(&writefs);
 
-			if (TNC->CONNECTING) FD_SET(TNC->WINMORSock,&writefs);	// Need notification of Connect
+			if (TNC->CONNECTING)
+				FD_SET(TNC->WINMORSock,&writefs);	// Need notification of Connect
 
-			if (TNC->BPQtoWINMOR_Q) FD_SET(TNC->WINMORSock,&writefs);	// Need notification of busy clearing
-
-
+			if (! Q_IS_EMPTY(&TNC->BPQtoWINMOR_Q))
+				FD_SET(TNC->WINMORSock,&writefs);	// Need notification of busy clearing
 
 			FD_ZERO(&errorfs);
 		
@@ -258,7 +258,7 @@ static int ExtProc(int fn, int port,unsigned char * buff, int code)
 
 				if (FD_ISSET(TNC->WINMORSock,&writefs))
 				{
-					if (BPQtoMPSK_Q[port] == 0)
+					if (Q_IS_EMPTY(&BPQtoMPSK_Q[port]))
 					{
 						//	Connect success
 
@@ -358,7 +358,7 @@ static int ExtProc(int fn, int port,unsigned char * buff, int code)
 
 			// if Busy, send buffer status poll
 	
-			if (STREAM->PACTORtoBPQ_Q == 0)
+			if (Q_IS_EMPTY(&STREAM->PACTORtoBPQ_Q))
 			{
 				if (STREAM->DiscWhenAllSent)
 				{
@@ -390,7 +390,7 @@ static int ExtProc(int fn, int port,unsigned char * buff, int code)
 			}
 		}
 
-		if (TNC->PortRecord->UI_Q)
+		if (! Q_IS_EMPTY(&TNC->PortRecord->UI_Q))
 		{
 			struct _MESSAGE * buffptr;
 
