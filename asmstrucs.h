@@ -138,10 +138,10 @@ typedef struct _TRANSPORTENTRY
 	struct _TRANSPORTENTRY * L4CROSSLINK; // POINTER TO LINKED L4 SESSION ENTRY
 	UCHAR	L4CIRCUITTYPE;		// BIT SIGNIFICANT - SEE BELOW
 	UCHAR	KAMSESSION;			// Session Number on KAM Host Mode TNC
-	struct DATAMESSAGE * L4TX_Q;
-	struct _L3MESSAGEBUFFER * L4RX_Q;	
-	struct DATAMESSAGE * L4HOLD_Q;				// FRAMES WAITING TO BE ACKED
-	struct _L3MESSAGEBUFFER * L4RESEQ_Q;		// FRAMES RECEIVED OUT OF SEQUENCE
+	q_head_t L4TX_Q;
+	q_head_t L4RX_Q;
+	q_head_t L4HOLD_Q;				// FRAMES WAITING TO BE ACKED
+	q_head_t L4RESEQ_Q;		// FRAMES RECEIVED OUT OF SEQUENCE
 
 	UCHAR	L4STATE;
 	USHORT	L4TIMER;
@@ -398,7 +398,7 @@ typedef struct _BPQVECSTRUC
 	ULONG	HOSTAPPLMASK;
 	UCHAR	HOSTAPPLFLAGS;
 	UCHAR	HOSTSTREAM;		// STREAM NUMBER
-	PMESSAGE	HOSTTRACEQ;
+	q_head_t HOSTTRACEQ;
 	HWND	HOSTHANDLE;		// HANDLE FOR POSTING MSGS TO
 	ULONG	HOSTAPPLNUM;	// Application Number
 	ULONG	STREAMOWNER;	//	PID of Process owning stream
@@ -721,7 +721,7 @@ typedef struct _EXTPORTDATA
 #define SIMPLE 1
 #define CONLOCK 2
 
-	UINT UI_Q;						// Unproto Frames for Session Mode Drivers (TRK, etc)
+	q_head_t UI_Q;						// Unproto Frames for Session Mode Drivers (TRK, etc)
 	int	FramesQueued;				// TX Frames queued in Driver
 
 } EXTPORTDATA, *PEXTPORTDATA;
