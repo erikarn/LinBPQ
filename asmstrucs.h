@@ -256,7 +256,7 @@ typedef struct _L3MESSAGEBUFFER
 //
 //	NETROM LEVEL 3 MESSAGE with Buffer Header 
 //
-	struct _L3MESSAGEBUFFER * Next;
+	struct _L3MESSAGEBUFFER * nNext;
 	UCHAR	Port;
 	SHORT	LENGTH;
 	UCHAR	L3PID;				// PID
@@ -483,7 +483,7 @@ typedef struct DEST_LIST
 
 struct XDIGI
 {
-	struct XDIGI * Next;	//  Chain
+	struct XDIGI * nNext;	//  Chain
 
 	UCHAR Call[7];
 	UCHAR Alias[7];
@@ -493,7 +493,7 @@ struct XDIGI
 
 struct WL2KInfo
 {
-	struct WL2KInfo * Next;
+	struct WL2KInfo * nNext;
 
 	char * Host;
 	short WL2KPort;
@@ -874,7 +874,7 @@ typedef struct _LINKTABLE
 							// (IF UP/DOWN)
 	PROUTE	NEIGHBOUR;		// POINTER TO NEIGHBOUR (IF CROSSLINK)
 
-	VOID *	L2FRAG_Q;		// DEFRAGMENTATION QUEUE
+	q_head_t L2FRAG_Q;		// DEFRAGMENTATION QUEUE
 
 } LINKTABLE;
 
@@ -1006,7 +1006,7 @@ struct StreamInfo
 
 struct TNCDATA
 {
-	struct TNCDATA * Next;
+	struct TNCDATA * nNext;
 	unsigned int Mode;				// 0 = TNC2, others may follow
 
 	UCHAR RXBUFFER[TNCBUFFLEN];		// BUFFER TO USER
