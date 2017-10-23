@@ -239,7 +239,7 @@ static int ExtProc(int fn, int port,unsigned char * buff, int code)
 	{
 	case 1:				// poll
 
-		while (TNC->PortRecord->UI_Q)			// Release anything accidentally put on UI_Q
+		while (! Q_IS_EMPTY(&TNC->PortRecord->UI_Q))			// Release anything accidentally put on UI_Q
 		{
 			buffptr = Q_REM(&TNC->PortRecord->UI_Q);
 			ReleaseBuffer(buffptr);
@@ -261,7 +261,7 @@ static int ExtProc(int fn, int port,unsigned char * buff, int code)
 
 		for (Stream = 0; Stream <= MaxStreams; Stream++)
 		{
-			if (TNC->Streams[Stream].PACTORtoBPQ_Q !=0)
+			if (! Q_IS_EMPTY(&TNC->Streams[Stream].PACTORtoBPQ_Q))
 			{
 				int datalen;
 			
@@ -778,7 +778,7 @@ VOID AEAPoll(int Port)
 
 	for (Stream = 0; Stream <= MaxStreams; Stream++)
 	{
-		if (TNC->TNCOK && TNC->Streams[Stream].BPQtoPACTOR_Q && TNC->DataBusy == FALSE)
+		if (TNC->TNCOK && (! Q_IS_EMPTY(&TNC->Streams[Stream].BPQtoPACTOR_Q)) && TNC->DataBusy == FALSE)
 		{
 			int datalen;
 			UCHAR TXMsg[1000];
@@ -865,7 +865,7 @@ VOID AEAPoll(int Port)
 				if (Stream == 0)
 					ShowTraffic(TNC);
 
-				if (STREAM->Disconnecting && TNC->Streams[Stream].BPQtoPACTOR_Q == 0)
+				if (STREAM->Disconnecting && Q_IS_EMPTY(&TNC->Streams[Stream].BPQtoPACTOR_Q))
 					TidyClose(TNC, 0);
 
 				return;
@@ -1190,7 +1190,7 @@ static VOID ProcessAEAPacket(struct TNCINFO * TNC, UCHAR * Msg, int Len)
 
 		// If nothing more to send, turn round link
 						
-		if ((TNC->Streams[0].BPQtoPACTOR_Q == 0) && TNC->NeedTurnRound &&
+		if (Q_IS_EMPTY(&TNC->Streams[0].BPQtoPACTOR_Q) && TNC->NeedTurnRound &&
 			(TNC->Streams[0].BytesAcked >= TNC->Streams[0].BytesTXed))		// Nothing following and all acked
 			{
 				Debugprintf("AEA Sent = Acked - sending Turnround");
