@@ -262,7 +262,7 @@ KAMExtProc(int fn, int port,unsigned char * buff, int code)
 	{
 	case 1:				// poll
 
-		while (TNC->PortRecord->UI_Q)			// Release anything accidentally put on UI_Q
+		while (! Q_IS_EMPTY(&TNC->PortRecord->UI_Q))			// Release anything accidentally put on UI_Q
 		{
 			buffptr = Q_REM(&TNC->PortRecord->UI_Q);
 			ReleaseBuffer(buffptr);
@@ -288,7 +288,7 @@ KAMExtProc(int fn, int port,unsigned char * buff, int code)
 		{
 			STREAM = &TNC->Streams[Stream];
 
-			if (STREAM->PACTORtoBPQ_Q !=0)
+			if (! Q_IS_EMPTY(&STREAM->PACTORtoBPQ_Q))
 			{
 				int datalen;
 			
@@ -819,13 +819,13 @@ VOID KAMPoll(int Port)
 			
 			STREAM->FramesQueued = 0;
 
-			while(STREAM->BPQtoPACTOR_Q)
+			while(! Q_IS_EMPTY(&STREAM->BPQtoPACTOR_Q))
 			{
 				buffptr=Q_REM(&STREAM->BPQtoPACTOR_Q);
 				ReleaseBuffer(buffptr);
 			}
 
-			while(STREAM->PACTORtoBPQ_Q)
+			while(! Q_IS_EMPTY(&STREAM->PACTORtoBPQ_Q))
 			{
 				buffptr=Q_REM(&STREAM->PACTORtoBPQ_Q);
 				ReleaseBuffer(buffptr);
@@ -949,7 +949,7 @@ VOID KAMPoll(int Port)
 
 		}
 
-		if (TNC->TNCOK && STREAM->BPQtoPACTOR_Q)
+		if (TNC->TNCOK && (! Q_IS_EMPTY(&STREAM->BPQtoPACTOR_Q)))
 		{
 			int datalen;
 			UCHAR TXMsg[1000] = "D20";
@@ -1027,7 +1027,7 @@ VOID KAMPoll(int Port)
 						TNC->Streams[0].BytesRXed, TNC->Streams[0].BytesTXed, TNC->Streams[0].BytesAcked);
 					SetWindowText(TNC->xIDC_TRAFFIC, Status);
 
-					if ((TNC->HFPacket == 0) && (TNC->Streams[0].BPQtoPACTOR_Q == 0))		// Nothing following
+					if ((TNC->HFPacket == 0) && (Q_IS_EMPTY(&TNC->Streams[0].BPQtoPACTOR_Q)))		// Nothing following
 					{
 						EncodeAndSend(TNC, "E", 1);			// Changeover when all sent
 					}
@@ -1036,7 +1036,7 @@ VOID KAMPoll(int Port)
 				if (STREAM->Disconnecting)
 				{
 					Debugprintf("Send with Disc Pending, Q = %x", STREAM->BPQtoPACTOR_Q);
-					if (STREAM->BPQtoPACTOR_Q == 0)		// All Sent
+					if (Q_IS_EMPTY(&STREAM->BPQtoPACTOR_Q))		// All Sent
 
 						// KAM doesnt have a tidy close!
 
