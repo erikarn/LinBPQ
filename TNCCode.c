@@ -33,7 +33,6 @@ along with LinBPQ/BPQ32.  If not, see http://www.gnu.org/licenses
 
 #include "CHeaders.h"
 
-int C_Q_COUNT(VOID *PQ);
 VOID SENDUIMESSAGE(struct DATAMESSAGE * Msg);
 
 VOID TNCTimerProc()
@@ -85,7 +84,7 @@ VOID TNCTimerProc()
 
 		if (HOSTSESS->HOSTAPPLFLAGS & 0x80)
 		{
-			if (HOSTSESS->HOSTTRACEQ)
+			if (! Q_IS_EMPTY(&HOSTSESS->HOSTTRACEQ))
 			{
 				int Count = C_Q_COUNT(&HOSTSESS->HOSTTRACEQ);
 

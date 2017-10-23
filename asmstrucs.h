@@ -1006,7 +1006,7 @@ struct StreamInfo
 
 struct TNCDATA
 {
-	struct TNCDATA * Next;
+	struct TNCDATA * nNext;
 	unsigned int Mode;				// 0 = TNC2, others may follow
 
 	UCHAR RXBUFFER[TNCBUFFLEN];		// BUFFER TO USER

@@ -225,7 +225,7 @@ static int ExtProc(int fn, int port, unsigned char * buff, int code)
 	{
 		// Clear anything from UI_Q
 
-		while (TNC->PortRecord->UI_Q)
+		while (! Q_IS_EMPTY(&TNC->PortRecord->UI_Q))
 		{
 			buffptr = Q_REM(&TNC->PortRecord->UI_Q);
 			ReleaseBuffer(buffptr);
@@ -290,7 +290,7 @@ ok:
 
 		for (Stream = 0; Stream <= MaxStreams; Stream++)
 		{
-			if (TNC->Streams[Stream].PACTORtoBPQ_Q !=0)
+			if (! Q_IS_EMPTY(&TNC->Streams[Stream].PACTORtoBPQ_Q))
 			{
 				int datalen;
 			
@@ -954,7 +954,7 @@ VOID DEDPoll(int Port)
 
 		// Clear anything from UI_Q
 
-		while (TNC->PortRecord->UI_Q)
+		while (! Q_IS_EMPTY(&TNC->PortRecord->UI_Q))
 		{
 			UINT * buffptr = Q_REM(&TNC->PortRecord->UI_Q);
 			ReleaseBuffer(buffptr);
@@ -1086,7 +1086,7 @@ VOID DEDPoll(int Port)
 
 		if (TNC->LastStream > MaxStreams) TNC->LastStream = 0;
 
-		if (TNC->TNCOK && TNC->Streams[Stream].BPQtoPACTOR_Q)
+		if (TNC->TNCOK && (! Q_IS_EMPTY(&TNC->Streams[Stream].BPQtoPACTOR_Q)))
 		{
 			int datalen;
 			UINT * buffptr;
@@ -1123,7 +1123,7 @@ VOID DEDPoll(int Port)
 
 				TNC->Streams[Stream].InternalCmd = TNC->Streams[Stream].Connected;
 
-				if (STREAM->Disconnecting && TNC->Streams[Stream].BPQtoPACTOR_Q == 0)
+				if (STREAM->Disconnecting && Q_IS_EMPTY(&TNC->Streams[Stream].BPQtoPACTOR_Q))
 					TidyClose(TNC, 0);
 
 				// Make sure Node Keepalive doesn't kill session.
@@ -1265,7 +1265,7 @@ VOID DEDPoll(int Port)
 		}	
 	}
 
-	if (TNC->TNCOK && TNC->PortRecord->UI_Q)
+	if (TNC->TNCOK && (! Q_IS_EMPTY(&TNC->PortRecord->UI_Q)))
 	{
 		int datalen;
 		char * Buffer;

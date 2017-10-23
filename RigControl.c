@@ -1960,7 +1960,7 @@ VOID ICOMPoll(struct RIGPORTINFO * PORT)
 		}
 	}
 
-	if (RIG->RIGOK && RIG->BPQtoRADIO_Q)
+	if (RIG->RIGOK && (! Q_IS_EMPTY(&RIG->BPQtoRADIO_Q)))
 	{
 		int datalen;
 		UINT * buffptr;
@@ -1971,6 +1971,7 @@ VOID ICOMPoll(struct RIGPORTINFO * PORT)
 
 		// Copy the ScanEntry struct from the Buffer to the PORT Scanentry
 
+#warning another 32 bit pointer buffptr thingy!
 		memcpy(&PORT->ScanEntry, buffptr+2, sizeof(struct ScanEntry));
 
 		PORT->FreqPtr = &PORT->ScanEntry;		// Block we are currently sending.
@@ -2642,7 +2643,7 @@ VOID YaesuPoll(struct RIGPORTINFO * PORT)
 		}
 	}
 	
-	if (RIG->RIGOK && RIG->BPQtoRADIO_Q)
+	if (RIG->RIGOK && (! Q_IS_EMPTY(&RIG->BPQtoRADIO_Q)))
 	{
 		int datalen;
 		UINT * buffptr;
@@ -2653,6 +2654,7 @@ VOID YaesuPoll(struct RIGPORTINFO * PORT)
 
 		// Copy the ScanEntry struct from the Buffer to the PORT Scanentry
 
+#warning another 32 bit pointer buffptr thingy!
 		memcpy(&PORT->ScanEntry, buffptr+2, sizeof(struct ScanEntry));
 
 		PORT->FreqPtr = &PORT->ScanEntry;		// Block we are currently sending.
@@ -2969,7 +2971,7 @@ VOID KenwoodPoll(struct RIGPORTINFO * PORT)
 		}
 	}
 	
-	if (RIG->RIGOK && RIG->BPQtoRADIO_Q)
+	if (RIG->RIGOK && (! Q_IS_EMPTY(&RIG->BPQtoRADIO_Q)))
 	{
 		int datalen;
 		UINT * buffptr;
@@ -2980,6 +2982,7 @@ VOID KenwoodPoll(struct RIGPORTINFO * PORT)
 
 		// Copy the ScanEntry struct from the Buffer to the PORT Scanentry
 
+#warning another 32 bit pointer buffptr thingy!
 		memcpy(&PORT->ScanEntry, buffptr+2, sizeof(struct ScanEntry));
 
 		PORT->FreqPtr = &PORT->ScanEntry;		// Block we are currently sending.

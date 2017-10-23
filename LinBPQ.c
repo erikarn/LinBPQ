@@ -1028,7 +1028,7 @@ int main(int argc, char * argv[])
 			{
 				HOSTVEC=&BPQHOSTVECTOR[i-1];
 
-				HOSTVEC->HOSTTRACEQ=0;
+				bzero(&HOSTVEC->HOSTTRACEQ, sizeof(q_head_t));
 
 				if (HOSTVEC->HOSTSESSION !=0)
 				{

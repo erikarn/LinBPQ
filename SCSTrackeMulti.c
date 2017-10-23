@@ -215,7 +215,7 @@ static int ExtProc(int fn, int port,unsigned char * buff, int code)
 		{
 			STREAM = &TNC->Streams[Stream];
 			
-			if (STREAM->PACTORtoBPQ_Q == 0)
+			if (Q_IS_EMPTY(&STREAM->PACTORtoBPQ_Q))
 			{
 				if (STREAM->DiscWhenAllSent)
 				{
@@ -737,7 +737,7 @@ static VOID DEDPoll(int Port)
 
 		if (TNC->LastStream > MaxStreams) TNC->LastStream = 0;
 
-		if (TNC->TNCOK && TNC->Streams[Stream].BPQtoPACTOR_Q)
+		if (TNC->TNCOK && (! Q_IS_EMPTY(&TNC->Streams[Stream].BPQtoPACTOR_Q)))
 		{
 			int datalen;
 			UINT * buffptr;
@@ -774,7 +774,7 @@ static VOID DEDPoll(int Port)
 
 				TNC->Streams[Stream].InternalCmd = TNC->Streams[Stream].Connected;
 
-				if (STREAM->Disconnecting && TNC->Streams[Stream].BPQtoPACTOR_Q == 0)
+				if (STREAM->Disconnecting && Q_IS_EMPTY(&TNC->Streams[Stream].BPQtoPACTOR_Q))
 					TidyClose(TNC, 0);
 
 				return;
@@ -844,7 +844,7 @@ static VOID DEDPoll(int Port)
 		}
 	}
 
-	if (TNC->TNCOK && TNC->PortRecord->UI_Q)
+	if (TNC->TNCOK && (! Q_IS_EMPTY(&TNC->PortRecord->UI_Q)))
 	{
 		int datalen;
 		char * Buffer;

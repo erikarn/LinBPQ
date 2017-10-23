@@ -91,8 +91,8 @@ extern UCHAR BPQDirectory[];
 
 static int UZ7HOChannel[MAXBPQPORTS+1];			// BPQ Port to UZ7HO Port
 static int BPQPort[MAXUZ7HOPORTS][MAXBPQPORTS+1];	// UZ7HO Port and Connection to BPQ Port
-static int UZ7HOtoBPQ_Q[MAXBPQPORTS+1];			// Frames for BPQ, indexed by BPQ Port
-static int BPQtoUZ7HO_Q[MAXBPQPORTS+1];			// Frames for UZ7HO. indexed by UZ7HO port. Only used it TCP session is blocked
+static q_head_t UZ7HOtoBPQ_Q[MAXBPQPORTS+1];			// Frames for BPQ, indexed by BPQ Port
+static q_head_t BPQtoUZ7HO_Q[MAXBPQPORTS+1];			// Frames for UZ7HO. indexed by UZ7HO port. Only used it TCP session is blocked
 
 static int MasterPort[MAXBPQPORTS+1];			// Pointer to first BPQ port for a specific UZ7HO host
 
@@ -273,9 +273,8 @@ static int ExtProc(int fn, int port,unsigned char * buff, int code)
 
 			if (TNC->CONNECTING) FD_SET(TNC->WINMORSock,&writefs);	// Need notification of Connect
 
-			if (TNC->BPQtoWINMOR_Q) FD_SET(TNC->WINMORSock,&writefs);	// Need notification of busy clearing
-
-
+			if (! Q_IS_EMPTY(&TNC->BPQtoWINMOR_Q))
+				FD_SET(TNC->WINMORSock,&writefs);	// Need notification of busy clearing
 
 			FD_ZERO(&errorfs);
 		
@@ -295,7 +294,7 @@ static int ExtProc(int fn, int port,unsigned char * buff, int code)
 
 				if (FD_ISSET(TNC->WINMORSock,&writefs))
 				{
-					if (BPQtoUZ7HO_Q[port] == 0)
+					if (Q_IS_EMPTY(&BPQtoUZ7HO_Q[port]))
 					{
 						APPLCALLS * APPL;
 						char * ApplPtr = APPLS;
@@ -466,7 +465,7 @@ static int ExtProc(int fn, int port,unsigned char * buff, int code)
 				}
 			}
 	
-			if (STREAM->PACTORtoBPQ_Q == 0)
+			if (Q_IS_EMPTY(&STREAM->PACTORtoBPQ_Q))
 			{
 				if (STREAM->DiscWhenAllSent)
 				{
@@ -499,7 +498,7 @@ static int ExtProc(int fn, int port,unsigned char * buff, int code)
 			}
 		}
 
-		if (TNC->PortRecord->UI_Q)
+		if (! Q_IS_EMPTY(&TNC->PortRecord->UI_Q))
 		{
 			struct AGWINFO * AGW = TNC->AGWInfo;
 	
@@ -1868,7 +1867,7 @@ VOID ProcessAGWPacket(struct TNCINFO * TNC, UCHAR * Message)
 				memcpy(&STREAM->FramesOutstanding, Message, 4);
 
 				if (STREAM->FramesOutstanding == 0)			// All Acked
-					if (STREAM->Disconnecting && STREAM->BPQtoPACTOR_Q == 0)
+					if (STREAM->Disconnecting && Q_IS_EMPTY(&STREAM->BPQtoPACTOR_Q))
 						TidyClose(TNC, 0);
 
 				return;

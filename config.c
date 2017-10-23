@@ -209,7 +209,7 @@ int tnctypes(int i, char value[],char rec[]);
 int do_kiss (char value[],char rec[]);
 int dec_byte(int i, char * value, char * rec);
 
-struct TNCDATA * TNCCONFIGTABLE = NULL;		// malloc'ed
+q_head_t TNCCONFIGTABLE = { };		// malloc'ed
 int NUMBEROFTNCPORTS = 0;
 
 struct TNCDATA * TNC2ENTRY;
@@ -262,7 +262,6 @@ extern int do_kiss(char *value,char *rec);
 extern int decode_ded_rec(char *rec);
 extern int simple(int i);
 
-int C_Q_ADD_NP(VOID *PQ, VOID *PBUFF);
 int doSerialPortName(int i, char * value, char * rec);
 
 BOOL ProcessAPPLDef(char * rec);
@@ -477,7 +476,7 @@ BOOL ProcessConfig()
 		PortDefined[i] = FALSE;
 	}
 
-	TNCCONFIGTABLE = NULL;
+	bzero(&TNCCONFIGTABLE, sizeof(q_head_t));
 	NUMBEROFTNCPORTS = 0;
 
 	Consoleprintf("Configuration file Preprocessor.");
@@ -1708,14 +1707,12 @@ int tncports(int i)
 		 return(0);
 	}
 
-	C_Q_ADD_NP(&TNCCONFIGTABLE, TNC2ENTRY);		// Add to chain
+	C_Q_ADD(&TNCCONFIGTABLE, TNC2ENTRY);		// Add to chain
 	
 	NUMBEROFTNCPORTS++;
 
-   	tncportoffset = tncportoffset + 8;
-	return(1); 
-
-
+	tncportoffset = tncportoffset + 8;
+	return(1);
 }
 
 

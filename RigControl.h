@@ -42,7 +42,7 @@ struct RIGINFO
 {
 //	struct TRANSPORTENTRY * AttachedSession;
 
-	int BPQtoRADIO_Q;			// Frames from switch for radio
+	q_head_t BPQtoRADIO_Q;			// Frames from switch for radio
 
 	UINT BPQPort;				// Port this radio is attached to. Bit Map, as may be more than one port controlling radio
 	int PortNum;				// Number of port that defined this rig

@@ -83,9 +83,8 @@ int BPQSerialSetPollDelay(HANDLE hDevice, int PollDelay);
 
 #define TNCBUFFLEN 1024
 
-extern struct TNCDATA * TNCCONFIGTABLE;
+extern q_head_t TNCCONFIGTABLE;
 
-struct TNCDATA * TNC2TABLE;		// malloc'ed
 extern int NUMBEROFTNCPORTS;
 
 struct TNCDATA TDP;			// Only way I can think of to get offets to port data into cmd table
@@ -1242,13 +1241,14 @@ BOOL InitializeTNCEmulator()
 	DWORD Errorval;
 	int ApplNum = 1;
 	UINT APPLMASK;
+	q_entry_t *cur;
+	struct TNCDATA * TNC;
 
-	struct TNCDATA * TNC = TNCCONFIGTABLE;
-
-	TNC2TABLE = TNCCONFIGTABLE;
-	
-	while (TNC)
+	cur = TNCCONFIGTABLE.head;
+	while (cur != NULL)
 	{
+		TNC = cur->ptr;
+
 		// Com Port may be a hardware device (ie /dev/ttyUSB0) COMn or VCOMn (BPQ Virtual COM)
 
 		char * Baud = strlop(TNC->PORTNAME, ',');
@@ -1478,7 +1478,7 @@ BOOL InitializeTNCEmulator()
 			strlop(TNC->MYCALL, ' ');
 		}
 
-		TNC = TNC->Next;
+		cur = cur->next;
 	}
 
 #ifdef LINBPQ
@@ -1495,13 +1495,16 @@ BOOL InitializeTNCEmulator()
 
 VOID CloseTNCEmulator()
 {
-	struct TNCDATA * TNC = TNC2TABLE;		// malloc'ed
+	struct TNCDATA * TNC;
+	q_entry_t *cur;
 	int i, Stream;
 
 	TNCRUNNING = FALSE;
+	cur = TNCCONFIGTABLE.head;
 
-	while (TNC)
+	while (cur != NULL)
 	{
+		TNC = cur->ptr;
 		if (TNC->Mode == TNC2)
 		{
 			Stream = TNC->BPQPort;
@@ -1524,8 +1527,7 @@ VOID CloseTNCEmulator()
 			}
 		}
 		CloseCOMPort(TNC->hDevice);
-
-		TNC = TNC->Next;
+		cur = cur->next;
 	}
 }
 
@@ -1533,14 +1535,17 @@ VOID TNCTimer()
 {
 	// 100 Ms Timer
 
-	struct TNCDATA * TNC = TNC2TABLE;
+	struct TNCDATA * TNC;
+	q_entry_t *cur;
 	struct StreamInfo * channel;
 	int n;
 
 	int NeedTrace = 0;
 
-	while (TNC)
+	cur = TNCCONFIGTABLE.head;
+	while (cur != NULL)
 	{
+		TNC = cur->ptr;
 		if (TNC->Mode != TNC2)
 			goto NotTNC2;
 			
@@ -1604,7 +1609,7 @@ NotTNC2:
 			}
 		}
 NextTNC:
-		TNC = TNC->Next;
+		cur = cur->next;
 	}
 	DOMONITORING(NeedTrace);
 }
@@ -1640,14 +1645,16 @@ VOID TNCPoll()
 	int retval, more;
 	char TXMsg[1000];
 	ULONG RXCount, TXCount, Read = 0, resp;
+	q_entry_t *cur;
+	struct TNCDATA * TNC;
 
-	struct TNCDATA * TNC = TNC2TABLE;		// malloc'ed
-
-	while (TNC)
+	cur = TNCCONFIGTABLE.head;
+	while (cur != NULL)
 	{
+		TNC = cur->ptr;
 		if (TNC->hDevice == 0)
 		{
-			TNC = TNC->Next;
+			cur = cur->next;
 			continue;						// Open failed
 		}
 		if (TNC->Mode == KANTRONICS)
@@ -1904,7 +1911,7 @@ VOID TNCPoll()
 				resp = WriteCOMBlock(TNC->hDevice, TXMsg, n);
 			}
 		}
-		TNC = TNC->Next;
+		cur = cur->next;
 	}
 }
 
@@ -1915,7 +1922,8 @@ VOID DOMONITORING(int NeedTrace)
 {
 	//	IF ANY PORTS HAVE MONITOR ENABLED, SET MONITOR BIT ON FIRST PORT
 
-	struct TNCDATA * TNC = TNC2TABLE;		// malloc'ed
+	struct TNCDATA * TNC;
+	q_entry_t *cur;
 	int Tracebit = 0, len, count, n;
 	time_t Stamp;
 	ULONG SaveMMASK = MMASK;
@@ -1926,6 +1934,11 @@ VOID DOMONITORING(int NeedTrace)
 	if (NeedTrace)
 		Tracebit = 0x80;
 
+	cur = TNCCONFIGTABLE.head;
+	if (cur == NULL)
+		return;
+
+	TNC = cur->ptr;
 	if (TNC->CONOK)
 		SetAppl(TNC->BPQPort, TNC->APPLFLAGS | Tracebit, TNC->APPLICATION);
 	else
@@ -1938,8 +1951,9 @@ VOID DOMONITORING(int NeedTrace)
 
 	len = DecodeFrame(&MONITORDATA, MONBUFFER, (int)Stamp);
 	
-	while (TNC)
+	while (cur != NULL)
 	{
+		TNC = cur->ptr;
 		if (TNC->Mode == TNC2 && TNC->TRACEFLAG)
 		{
 			SetTraceOptionsEx(TNC->MMASK, TNC->MTX, TNC->MCOM, 0);
@@ -1955,7 +1969,7 @@ VOID DOMONITORING(int NeedTrace)
 				}
 			}
 		}
-		TNC=TNC->Next;
+		cur = cur->next;
 	}
 }
 

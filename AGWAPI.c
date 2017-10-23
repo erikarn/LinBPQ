@@ -687,13 +687,13 @@ int AGWDoMonitorData()
 
 	// Look for Monitor Data
 
-	while (AGWMONVECPTR->HOSTTRACEQ)
+	while (! Q_IS_EMPTY(&AGWMONVECPTR->HOSTTRACEQ))
 	{
 		MESSAGE * monbuff;
 
 		GetSemaphore(&Semaphore, 99);
 		
-		monbuff = Q_REM((UINT *)&AGWMONVECPTR->HOSTTRACEQ);
+		monbuff = Q_REM(&AGWMONVECPTR->HOSTTRACEQ);
 
 		RawLen = monbuff->LENGTH;
 

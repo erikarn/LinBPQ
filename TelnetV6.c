@@ -648,7 +648,7 @@ ExtProc(int fn, int port,unsigned char * buff, int code)
 
 		// 100 mS Timer. Now needed, as Poll can be called more ferquently in some circimstances
 
-		while (TNC->PortRecord->UI_Q)			// Release anything accidentally put on UI_Q
+		while (! Q_IS_EMPTY(&TNC->PortRecord->UI_Q))			// Release anything accidentally put on UI_Q
 		{
 			buffptr = Q_REM(&TNC->PortRecord->UI_Q);
 			ReleaseBuffer(buffptr);
@@ -746,7 +746,7 @@ ExtProc(int fn, int port,unsigned char * buff, int code)
 		{
 			STREAM = &TNC->Streams[Stream];
 
-			if (STREAM->PACTORtoBPQ_Q !=0)
+			if (! Q_IS_EMPTY(&STREAM->PACTORtoBPQ_Q))
 			{
 				int datalen;
 			
@@ -1785,7 +1785,7 @@ VOID TelnetPoll(int Port)
 
 nosocks:
 
-	while (TELNETMONVECPTR->HOSTTRACEQ)
+	while (! Q_IS_EMPTY(&TELNETMONVECPTR->HOSTTRACEQ))
 	{
 		int stamp, len;
 		BOOL MonitorNODES = FALSE;
@@ -1794,7 +1794,7 @@ nosocks:
 
 		unsigned char buffer[1024] = "\xff\x1b\xb";
 
-		monbuff = Q_REM((UINT *)&TELNETMONVECPTR->HOSTTRACEQ);
+		monbuff = Q_REM(&TELNETMONVECPTR->HOSTTRACEQ);
 		monchars = (UCHAR *)monbuff;
 
 		stamp = monbuff->Timestamp;
@@ -1876,7 +1876,7 @@ nosocks:
 
 			sockptr->FromHostBuffPutptr = sockptr->FromHostBuffGetptr = 0;	// clear any queued data
 
-			while(TNC->Streams[Stream].BPQtoPACTOR_Q)
+			while(! Q_IS_EMPTY(&TNC->Streams[Stream].BPQtoPACTOR_Q))
 			{
 				buffptr=Q_REM(&TNC->Streams[Stream].BPQtoPACTOR_Q);
 				if (TelSendPacket(Stream, &TNC->Streams[Stream], buffptr) == FALSE)
@@ -1888,7 +1888,7 @@ nosocks:
 					sockptr->ResendBuffer = NULL;
 					sockptr->ResendLen = 0;
 
-					while(TNC->Streams[Stream].BPQtoPACTOR_Q)
+					while(! Q_IS_EMPTY(&TNC->Streams[Stream].BPQtoPACTOR_Q))
 					{
 						buffptr=Q_REM(&TNC->Streams[Stream].BPQtoPACTOR_Q);
 						ReleaseBuffer(buffptr);
@@ -1897,7 +1897,7 @@ nosocks:
 				}
 			}
 
-			while(TNC->Streams[Stream].PACTORtoBPQ_Q)
+			while(! Q_IS_EMPTY(&TNC->Streams[Stream].PACTORtoBPQ_Q))
 			{
 				buffptr=Q_REM(&TNC->Streams[Stream].PACTORtoBPQ_Q);
 				ReleaseBuffer(buffptr);
@@ -2015,7 +2015,7 @@ nosocks:
 			continue;
 		}
 			
-		while (STREAM->BPQtoPACTOR_Q)
+		while (! Q_IS_EMPTY(&STREAM->BPQtoPACTOR_Q))
 		{
 			int datalen;
 			UINT * buffptr;
@@ -2235,7 +2235,7 @@ nosocks:
 			// Can't use TXCount - it is Semaphored=
 
 			Queued = C_Q_COUNT(&TNC->Streams[Stream].PACTORtoBPQ_Q);
-			Queued += C_Q_COUNT((UINT *)&TNC->PortRecord->PORTCONTROL.PORTRX_Q);
+			Queued += C_Q_COUNT(&TNC->PortRecord->PORTCONTROL.PORTRX_Q);
 
 			if (Sess2)
 				Queued += CountFramesQueuedOnSession(Sess2);
