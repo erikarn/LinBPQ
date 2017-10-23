@@ -121,8 +121,8 @@ extern UCHAR BPQDirectory[];
 
 static int MPSKChannel[MAXBPQPORTS+1];			// BPQ Port to MPSK Port
 static int BPQPort[MAXMPSKPORTS][MAXBPQPORTS+1];	// MPSK Port and Connection to BPQ Port
-static int MPSKtoBPQ_Q[MAXBPQPORTS+1];			// Frames for BPQ, indexed by BPQ Port
-static int BPQtoMPSK_Q[MAXBPQPORTS+1];			// Frames for MPSK. indexed by MPSK port. Only used it TCP session is blocked
+static q_head_t MPSKtoBPQ_Q[MAXBPQPORTS+1];			// Frames for BPQ, indexed by BPQ Port
+static q_head_t BPQtoMPSK_Q[MAXBPQPORTS+1];			// Frames for MPSK. indexed by MPSK port. Only used it TCP session is blocked
 
 //	Each port may be on a different machine. We only open one connection to each MPSK instance
 
@@ -373,7 +373,7 @@ static int ExtProc(int fn, int port,unsigned char * buff, int code)
 
 				if (FD_ISSET(TNC->WINMORDataSock,&writefs))
 				{
-					if (BPQtoMPSK_Q[port] == 0)
+					if (Q_IS_EMPTY(&BPQtoMPSK_Q[port]))
 					{
 						//	Connect success
 
@@ -449,7 +449,7 @@ static int ExtProc(int fn, int port,unsigned char * buff, int code)
 
 			// if Busy, send buffer status poll
 	
-			if (STREAM->PACTORtoBPQ_Q == 0)
+			if (Q_IS_EMPTY(&STREAM->PACTORtoBPQ_Q))
 			{
 				if (STREAM->DiscWhenAllSent)
 				{
@@ -479,7 +479,7 @@ static int ExtProc(int fn, int port,unsigned char * buff, int code)
 			}
 		}
 
-		if (TNC->PortRecord->UI_Q)
+		if (! Q_IS_EMPTY(&TNC->PortRecord->UI_Q))
 		{
 			struct _MESSAGE * buffptr;
 			int SendLen;
@@ -827,7 +827,7 @@ static int ExtProc(int fn, int port,unsigned char * buff, int code)
 			if (Outstanding < 0)
 				Outstanding += 64;
 
-			TNC->PortRecord->FramesQueued = Outstanding + TNC->Streams[0].BPQtoPACTOR_Q;		// Save for Appl Level Queued Frames
+			TNC->PortRecord->FramesQueued = Outstanding + C_Q_COUNT(&TNC->Streams[0].BPQtoPACTOR_Q);		// Save for Appl Level Queued Frames
 
 			if (Outstanding > ARQ->TXWindow)
 				return (1 | TNCOK << 8 | STREAM->Disconnecting << 15); // 3rd Nibble is frames unacked
@@ -3099,14 +3099,14 @@ VOID ARQTimer(struct TNCINFO * TNC)
 
 	if (ARQ->ARQTimerState == ARQ_WAITDATA)
 	{
-		while (STREAM->BPQtoPACTOR_Q)
+		while (! Q_IS_EMPTY(&STREAM->BPQtoPACTOR_Q))
 		{
 			Outstanding = ARQ->TXSeq - ARQ->TXLastACK;
 		
 			if (Outstanding < 0)
 				Outstanding += 64;
 
-			TNC->PortRecord->FramesQueued = Outstanding + STREAM->BPQtoPACTOR_Q;		// Save for Appl Level Queued Frames
+			TNC->PortRecord->FramesQueued = Outstanding + C_Q_COUNT(&STREAM->BPQtoPACTOR_Q);		// Save for Appl Level Queued Frames
 
 			if (Outstanding > ARQ->TXWindow)
 				break;
@@ -3152,14 +3152,14 @@ VOID ARQTimer(struct TNCINFO * TNC)
 
 	if (ARQ->TurnroundTimer == 0)
 	{
-		while (STREAM->BPQtoPACTOR_Q)
+		while (! Q_IS_EMPTY(&STREAM->BPQtoPACTOR_Q))
 		{
 			Outstanding = ARQ->TXSeq - ARQ->TXLastACK;
 		
 			if (Outstanding < 0)
 				Outstanding += 64;
 
-			TNC->PortRecord->FramesQueued = Outstanding + STREAM->BPQtoPACTOR_Q + 1; // Make sure busy is reported to BBS
+			TNC->PortRecord->FramesQueued = Outstanding + C_Q_COUNT(&STREAM->BPQtoPACTOR_Q) + 1; // Make sure busy is reported to BBS
 
 			if (Outstanding > ARQ->TXWindow)
 				break;
@@ -3253,10 +3253,10 @@ VOID ARQTimer(struct TNCINFO * TNC)
 			STREAM->ReportDISC = TRUE;	
 			ARQ->ARQState = FALSE;
 
-			while (STREAM->PACTORtoBPQ_Q)
+			while (! Q_IS_EMPTY(&STREAM->PACTORtoBPQ_Q))
 				ReleaseBuffer(Q_REM(&STREAM->PACTORtoBPQ_Q));
 	
-			while (STREAM->BPQtoPACTOR_Q)
+			while (! Q_IS_EMPTY(&STREAM->BPQtoPACTOR_Q))
 				ReleaseBuffer(Q_REM(&STREAM->BPQtoPACTOR_Q));
 	
 			strcpy(TNC->WEB_TNCSTATE, "Free");
@@ -3324,7 +3324,7 @@ VOID ProcessARQStatus(struct TNCINFO * TNC, struct ARQINFO * ARQ, char * Input)
 	if (Outstanding < 0)
 		Outstanding += 64;
 
-	TNC->PortRecord->FramesQueued = Outstanding + STREAM->BPQtoPACTOR_Q;		// Save for Appl Level Queued Frames
+	TNC->PortRecord->FramesQueued = Outstanding + C_Q_COUNT(&STREAM->BPQtoPACTOR_Q);		// Save for Appl Level Queued Frames
 
 	if (FirstUnAcked == ARQ->TXSeq)
 	{
