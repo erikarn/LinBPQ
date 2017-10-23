@@ -414,7 +414,7 @@ VOID ARDOPSendCommand(struct TNCINFO * TNC, char * Buff, BOOL Queue)
 
 	if (Queue)
 	{
-		if (TNC->BPQtoWINMOR_Q)
+		if (! Q_IS_EMPTY(&TNC->BPQtoWINMOR_Q))
 		{
 			// Something already queued
 			C_Q_ADD(&TNC->BPQtoWINMOR_Q, buffptr);
@@ -540,7 +540,7 @@ int ARDOPSendData(struct TNCINFO * TNC, char * Buff, int Len)
 
 	buffptr[1] = Len + 6;
 
-	if (TNC->BPQtoWINMOR_Q)
+	if (! Q_IS_EMPTY(&TNC->BPQtoWINMOR_Q))
 	{
 		// Something already queued
 		
@@ -598,7 +598,7 @@ static int ExtProc(int fn, int port,unsigned char * buff, int code)
 	{
 		// clear Q if not connected
 
-		while(TNC->BPQtoWINMOR_Q)
+		while(! Q_IS_EMPTY(&TNC->BPQtoWINMOR_Q))
 		{
 			buffptr = Q_REM(&TNC->BPQtoWINMOR_Q);
 
@@ -612,7 +612,7 @@ static int ExtProc(int fn, int port,unsigned char * buff, int code)
 	{
 	case 1:				// poll
 
-		while (TNC->PortRecord->UI_Q)
+		while (! Q_IS_EMPTY(&TNC->PortRecord->UI_Q))
 		{
 			int datalen;
 			char * Buffer;
@@ -897,7 +897,7 @@ static int ExtProc(int fn, int port,unsigned char * buff, int code)
 		
 		// See if any frames for this port
 
-		if (TNC->Streams[0].BPQtoPACTOR_Q)		//Used for CTEXT
+		if (! Q_IS_EMPTY(&TNC->Streams[0].BPQtoPACTOR_Q))		//Used for CTEXT
 		{
 			UINT * buffptr = Q_REM(&TNC->Streams[0].BPQtoPACTOR_Q);
 			txlen=buffptr[1];
@@ -909,7 +909,7 @@ static int ExtProc(int fn, int port,unsigned char * buff, int code)
 		}
 
 
-		if (TNC->WINMORtoBPQ_Q != 0)
+		if (! Q_IS_EMPTY(&TNC->WINMORtoBPQ_Q))
 		{
 			buffptr=Q_REM(&TNC->WINMORtoBPQ_Q);
 
@@ -947,7 +947,7 @@ static int ExtProc(int fn, int port,unsigned char * buff, int code)
 			return 0;		// Don't try if not connected
 		}
 
-		if (TNC->Streams[0].BPQtoPACTOR_Q)		//Used for CTEXT
+		if (! Q_IS_EMPTY(&TNC->Streams[0].BPQtoPACTOR_Q))		//Used for CTEXT
 		{
 			UINT * buffptr = Q_REM(&TNC->Streams[0].BPQtoPACTOR_Q);
 			txlen=buffptr[1];
@@ -1759,7 +1759,7 @@ ARDOPThread(void *arg)
 
 	GetSemaphore(&Semaphore, 52);
 
-	while(TNC->BPQtoWINMOR_Q)
+	while(! Q_IS_EMPTY(&TNC->BPQtoWINMOR_Q))
 	{
 		buffptr = Q_REM(&TNC->BPQtoWINMOR_Q);
 
@@ -1943,23 +1943,15 @@ VOID ARDOPProcessResponse(struct TNCINFO * TNC, UCHAR * Buffer, int MsgLen)
 		//	Command ACK. Remove from bufer and send next if any
 
 		UINT * buffptr;
-		UINT * Q;
-	
-	
+
 		buffptr = Q_REM(&TNC->BPQtoWINMOR_Q);
 
 		if (buffptr)
 			ReleaseBuffer(buffptr);
 
 		// See if another
-
 		// Leave on Queue till acked
-
-		// Q may not be word aligned, so copy as bytes (for ARM5)
-
-		Q = (UINT *)&TNC->BPQtoWINMOR_Q;
-
-		buffptr = (UINT *)Q[0];
+		buffptr = Q_GET_HEAD(&TNC->BPQtoWINMOR_Q);
 
 		if (buffptr)
 			SendToTNC(TNC, (UCHAR *)&buffptr[2], buffptr[1]);
@@ -1972,16 +1964,9 @@ VOID ARDOPProcessResponse(struct TNCINFO * TNC, UCHAR * Buffer, int MsgLen)
 		//	Command NAK. Resend 
 
 		UINT * buffptr;
-		UINT * Q;
-	
+
 		// Leave on Queue till acked
-
-		// Q may not be word aligned, so copy as bytes (for ARM5)
-
-		Q = (UINT *)&TNC->BPQtoWINMOR_Q;
-
-		buffptr = (UINT *)Q[0];
-
+		buffptr = Q_GET_HEAD(&TNC->BPQtoWINMOR_Q);
 		if (buffptr)
 			SendToTNC(TNC, (UCHAR *)&buffptr[2], buffptr[1]);
 
