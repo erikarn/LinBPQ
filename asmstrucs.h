@@ -77,6 +77,7 @@ typedef struct _CMDX
 	char String[12];			// COMMAND STRING
 	UCHAR CMDLEN;				// SIGNIFICANT LENGTH
 	VOID (* CMDPROC)();			// COMMAND PROCESSOR
+	/* XXX TODO: adrian - should split this into flag and value ... */
 	VOID * CMDFLAG;				// FLAG/VALUE ADDRESS
 } CMDX;
 
