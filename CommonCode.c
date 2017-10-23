@@ -95,6 +95,27 @@ int GetLengthfromBuffer(UCHAR * buff)				// Neded for arm5 portability
 #endif
 }
 
+void
+Q_REM_ENTRY(q_head_t *h, q_entry_t *e)
+{
+
+	/* Pull it off. */
+	if (h->head == h->tail) {
+		/*If head == tail, then the list is now empty */
+		h->head = NULL;
+		h->tail = NULL;
+	} else {
+		/* head != tail, then make sure the next entry is the head */
+		h->head = e->next;
+		e->next->prev = NULL;
+	}
+
+	/* And now that we're done with that .. */
+	free(e);
+}
+
+
+
 // Get buffer from Queue
 VOID * _Q_REM(q_head_t *PQ, char * File, int Line)
 {
@@ -107,22 +128,11 @@ VOID * _Q_REM(q_head_t *PQ, char * File, int Line)
 	f = PQ->head;
 	p = f->ptr;
 
-	/* Pull it off. */
-	if (PQ->head == PQ->tail) {
-		/*If head == tail, then the list is now empty */
-		PQ->head = NULL;
-		PQ->tail = NULL;
-	} else {
-		/* head != tail, then make sure the next entry is the head */
-		PQ->head = f->next;
-		f->next->prev = NULL;
-	}
-
-	/* And now that we're done with that .. */
-	free(f);
+	Q_REM_ENTRY(PQ, f);
 
 	return (p);
 }
+
 
 void printStack(void);
 

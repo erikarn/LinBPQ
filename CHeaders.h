@@ -49,6 +49,8 @@ Q_GET_HEAD(q_head_t *Q)
 	return (Q->head->ptr);
 }
 
+void Q_REM_ENTRY(q_head_t *h, q_entry_t *e);
+
 UINT _ReleaseBuffer(VOID *BUFF, char * File, int Line);
 
 VOID * _GetBuff(char * File, int Line);
