@@ -483,7 +483,7 @@ typedef struct DEST_LIST
 
 struct XDIGI
 {
-	struct XDIGI * nNext;	//  Chain
+	struct XDIGI * Next;	//  Chain
 
 	UCHAR Call[7];
 	UCHAR Alias[7];
@@ -493,7 +493,7 @@ struct XDIGI
 
 struct WL2KInfo
 {
-	struct WL2KInfo * nNext;
+	struct WL2KInfo * Next;
 
 	char * Host;
 	short WL2KPort;
