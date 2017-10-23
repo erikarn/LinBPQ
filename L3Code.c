@@ -81,7 +81,7 @@ VOID L3BG()
 	{
 		if (DEST->DEST_CALL[0])				// Active entry?
 		{
-			while(DEST->DEST_Q)				// FRAMES TO SEND?
+			while(! Q_IS_EMPTY(&DEST->DEST_Q))				// FRAMES TO SEND?
 			{
 				int ActiveRoute = DEST->DEST_ROUTE;
 
@@ -965,7 +965,7 @@ VOID L3FastTimer()
 	{
 		L3_10SECS = 10;
 	
-		if (IDMSG_Q)				// ID/BEACON TO SEND
+		if (! Q_IS_EMPTY(&IDMSG_Q))				// ID/BEACON TO SEND
 		{
 			Msg = Q_REM(&IDMSG_Q);
 
@@ -1121,7 +1121,7 @@ VOID REMOVENODE(dest_list * DEST)
 
 	//	Remove a node, either because routes have gone, or APPL API has invalidated it
 
-	while (DEST->DEST_Q)
+	while (! Q_IS_EMPTY(&DEST->DEST_Q))
 		ReleaseBuffer(Q_REM(&DEST->DEST_Q));
 
 	//	MAY NEED TO CHECK FOR L4 CIRCUITS USING DEST, BUT PROBABLY NOT,
@@ -1245,7 +1245,7 @@ VOID L3TRYNEXTDEST(struct ROUTE * ROUTE)
 				//	REMOVE FIRST MESSAGE FROM DEST_Q. L4 WILL RETRY - IF IT IS LEFT HERE
 				//	WE WILL TRY TO ACTIVATE THE DESTINATION FOR EVER
 
-				if (DEST->DEST_Q)
+				if (! Q_IS_EMPTY(&DEST->DEST_Q))
 					ReleaseBuffer(Q_REM(&DEST->DEST_Q));
 
 				DEST->DEST_ROUTE++;			// TO NEXT
