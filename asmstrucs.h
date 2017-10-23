@@ -247,6 +247,9 @@ typedef struct ROUTE
 
 #pragma pack(1)
 
+/*
+ * XXX TODO: adrian - same deal here, chain pointer, etc
+ */
 typedef struct _L3MESSAGEBUFFER
 {
 //
@@ -271,9 +274,7 @@ typedef struct _L3MESSAGEBUFFER
 	UCHAR	L4FLAGS;			// FRAGMENTATION, ACK/NAK, FLOW CONTROL AND MSG TYPE BITS
 
 	UCHAR	L4DATA[236]	;		//DATA
-
 } L3MESSAGEBUFFER, *PL3MESSAGEBUFFER;
-
 
 typedef struct _L3MESSAGE
 {
@@ -298,6 +299,14 @@ typedef struct _L3MESSAGE
 
 #define MSGHDDRLEN 7 //sizeof(VOID *) + sizeof(UCHAR) + sizeof(USHORT)
 
+/*
+ * XXX TODO: adrian - yes, this is the header of an allocated buffer.
+ * It has two pointers in it which need to eventually be converted
+ * to something that aren't pointers or the math will hilariously break.
+ *
+ * XXX TODO: and there are lots of hard-coded message offset expctations
+ * which are all broken.
+ */
 typedef struct _MESSAGE
 {
 //	BASIC LINK LEVEL MESSAGE BUFFER LAYOUT
@@ -320,7 +329,7 @@ typedef struct _MESSAGE
 		UCHAR L2DATA[256];
 		struct _L3MESSAGE L3MSG;
 	};
-		
+	/* XXX TODO: adrian - lots of places has /this/ padding logic in placs.. */
 	UCHAR Padding[BUFFLEN - sizeof(time_t) - sizeof(unsigned short) - sizeof(VOID *) - 256 - MSGHDDRLEN - 16];
 
 	unsigned short Process;
@@ -330,6 +339,9 @@ typedef struct _MESSAGE
 }MESSAGE, *PMESSAGE;
 
 
+/*
+ * XXX TODO: adrian - same deal here, chain pointer, etc
+ */
 typedef struct HDDRWITHDIGIS
 {
 //	BASIC LINK LEVEL MESSAGE BUFFER LAYOUT
@@ -355,7 +367,9 @@ typedef struct HDDRWITHDIGIS
 
 } DIGIMESSAGE, *PDIGIMESSAGE;
 
-
+/*
+ * XXX TODO: adrian - same deal here, chain pointer, etc
+ */
 typedef struct DATAMESSAGE
 {
 //	BASIC LINK LEVEL MESSAGE HEADERLAYOUT

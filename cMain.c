@@ -81,8 +81,6 @@ APPLCALLS APPLCALLTABLE[NumberofAppls] = {0};
 UCHAR	MYNODECALL[10] = "";				// NODE CALLSIGN (ASCII)
 UCHAR	MYNETROMCALL[10] = "";				// NETROM CALLSIGN (ASCII)
 
-UINT	FREE_Q = 0;
-
 time_t TimeLoaded = 0;
 
 struct PORTCONTROL * PORTTABLE = NULL;
@@ -91,8 +89,6 @@ int PORTENTRYLEN = sizeof(struct PORTCONTROL);
 
 struct DEST_LIST * ENDDESTLIST = NULL;		//		; NODE LIST+1
 ;
-
-VOID * BUFFERPOOL = NULL;		// START OF BUFFER POOL
 
 int OBSINIT = 5;				// INITIAL OBSOLESCENCE VALUE
 int OBSMIN = 4;					// MINIMUM TO BROADCAST
@@ -104,7 +100,6 @@ int HIDENODES = 0;				// N * COMMAND SWITCH
 int BBSQUAL = 255;				// QUALITY OF BBS RELATIVE TO NODE
 
 int NUMBEROFBUFFERS = 999;		// PACKET BUFFERS
-
 int PACLEN = 100;				//MAX PACKET SIZE
 
 //	L2 SYSTEM TIMER RUNS AT 3 HZ
@@ -577,7 +572,6 @@ BOOL Start()
 
 	// Reinit everything in case of restart
 
-	FREE_Q = 0;
 	TRACE_Q = 0;
 	IDMSG_Q = 0;
 	NUMBEROFPORTS = 0;
@@ -685,9 +679,6 @@ BOOL Start()
 	L4N2 = cfg->C_L4RETRIES;
 	L4DEFAULTWINDOW = cfg->C_L4WINDOW;
 	L4T1 = cfg->C_L4TIMEOUT;
-
-//	MOV	AX,C_BUFFERS
-//	MOV	NUMBEROFBUFFERS,AX
 
 	PACLEN = cfg->C_PACLEN;
 	T3 = cfg->C_T3 * 3;
@@ -1212,28 +1203,17 @@ BOOL Start()
 		X = (X + 3)& 0x0FFFFFFFC;	// MASK TO DWORD
 		NEXTFREEDATA = (UCHAR *)X;
 	}
-	BUFFERPOOL = NEXTFREEDATA;
 
-	Consoleprintf("PORTS %x LINKS %x DESTS %x ROUTES %x L4 %x BUFFERS %x\n",
-		PORTTABLE, LINKS, DESTS, NEIGHBOURS, L4TABLE, BUFFERPOOL);
+	Consoleprintf("PORTS %x LINKS %x DESTS %x ROUTES %x L4 %x NUMBEROFBUFFERS %d\n",
+		PORTTABLE, LINKS, DESTS, NEIGHBOURS, L4TABLE, NUMBEROFBUFFERS);
 
-	Debugprintf("PORTS %x LINKS %x DESTS %x ROUTES %x L4 %x BUFFERS %x ",
-		PORTTABLE, LINKS, DESTS, NEIGHBOURS, L4TABLE, BUFFERPOOL);
+	Debugprintf("PORTS %x LINKS %x DESTS %x ROUTES %x L4 %x NUMBEROBUFFERS %d ",
+		PORTTABLE, LINKS, DESTS, NEIGHBOURS, L4TABLE, NUMBEROFBUFFERS);
 
-	i = NUMBEROFBUFFERS;
-
-	NUMBEROFBUFFERS = 0;
-
-	while (i-- && NEXTFREEDATA < (DATAAREA + DATABYTES - 400))	// was BUFFLEN
-	{
-		Bufferlist[NUMBEROFBUFFERS] = (UINT *)NEXTFREEDATA;
-
-		ReleaseBuffer((UINT *)NEXTFREEDATA);
-		NEXTFREEDATA += 400;			// was BUFFLEN
-
-		NUMBEROFBUFFERS++;
-		MAXBUFFS++;
-	}
+	/* XXX TODO: adrian - yes, this just assumes we can now allocate them.. */
+	MAXBUFFS = NUMBEROFBUFFERS;
+	/* XXX TODO: adrian - and this is the old "free queue" depth */
+	QCOUNT = NUMBEROFBUFFERS;
 
 	//	Copy Bridge Map
 
@@ -2109,133 +2089,4 @@ VOID INITIALISEPORTS()
 
 VOID FindLostBuffers()
 {
-	UINT * Buff;
-	int n, i;
-	unsigned int rev;
-
-	UINT CodeDump[16];
-	PBPQVECSTRUC HOSTSESS = BPQHOSTVECTOR;
-	struct _TRANSPORTENTRY * L4;	// Pointer to Session
-	
-	struct DEST_LIST * DEST = DESTS;
-	
-	n = MAXDESTS;
-
-	Debugprintf("Looking for missing Buffers");
-
-	while (n--)
-	{
-		if (DEST->DEST_CALL[0] && DEST->DEST_Q)		// Spare
-		{
-			Debugprintf("DEST Queue %s %d", DEST->DEST_ALIAS, C_Q_COUNT(&DEST->DEST_Q));
-		}
-
-		DEST++;
-	}
-
-	n = 0;
-
-	while (n < BPQHOSTSTREAMS + 4)
-	{
-		// Check Trace Q
-
-		if (HOSTSESS->HOSTTRACEQ)
-		{
-			int Count = C_Q_COUNT(&HOSTSESS->HOSTTRACEQ);
-
-			Debugprintf("Trace Buffers Stream %d Count %d", n, Count);
-
-			L4 = HOSTSESS->HOSTSESSION;
-
-			if (L4 && (L4->L4TX_Q || L4->L4RX_Q || L4->L4HOLD_Q || L4->L4RESEQ_Q))
-				Debugprintf("Stream %d %d %d %d %d", n, C_Q_COUNT(&L4->L4TX_Q),
-					C_Q_COUNT(&L4->L4RX_Q), C_Q_COUNT(&L4->L4HOLD_Q), C_Q_COUNT(&L4->L4RESEQ_Q));
-
-		}
-		n++;
-		HOSTSESS++;
-	}
-
-	n = MAXCIRCUITS;
-	L4 = L4TABLE;
-
-	while (n--)
-	{
-		if (L4->L4USER[0] == 0)
-		{
-			L4++;
-			continue;
-		}
-		if (L4->L4TX_Q || L4->L4RX_Q || L4->L4HOLD_Q || L4->L4RESEQ_Q)
-			Debugprintf("L4 %d TX %d RX %d HOLD %d RESEQ %d", MAXCIRCUITS - n, C_Q_COUNT(&L4->L4TX_Q),
-				C_Q_COUNT(&L4->L4RX_Q), C_Q_COUNT(&L4->L4HOLD_Q), C_Q_COUNT(&L4->L4RESEQ_Q));
-		L4++;
-	}
-
-	// Build list of buffers, then mark off all on free Q
-
-	Buff = BUFFERPOOL;
-	n = 0;
-
-	for (i = 0; i < NUMBEROFBUFFERS; i++)
-	{
-		Bufferlist[n++] = Buff;
-		Buff += 100;		// was (BUFFLEN / 4);
-	}
-
-	Buff = (UINT *)FREE_Q;
-
-	while (Buff)
-	{
-		n = NUMBEROFBUFFERS;
-
-		while (n--)
-		{
-			if (Bufferlist[n] == Buff)
-			{
-				Bufferlist[n] = 0;
-				break;
-			}
-		}
-		Buff = (UINT *)*Buff;
-	}
-	n = NUMBEROFBUFFERS;
-
-	while (n--)
-	{
-		if (Bufferlist[n])
-		{
-			MESSAGE * Msg = (MESSAGE *)Bufferlist[n];
-
-			memcpy(CodeDump, Bufferlist[n], 64);
-	
-			for (i = 0; i < 16; i++)
-			{
-				rev = (CodeDump[i] & 0xff) << 24;
-				rev |= (CodeDump[i] & 0xff00) << 8;
-				rev |= (CodeDump[i] & 0xff0000) >> 8;
-				rev |= (CodeDump[i] & 0xff000000) >> 24;
-
-				CodeDump[i] = rev;
-		}
-
-		Debugprintf("%08x %08x %08x %08x %08x %08x %08x %08x %08x ",
-			Bufferlist[n], CodeDump[0], CodeDump[1], CodeDump[2], CodeDump[3], CodeDump[4], CodeDump[5], CodeDump[6], CodeDump[7]);
-
-		Debugprintf("         %08x %08x %08x %08x %08x %08x %08x %08x %d",
-			CodeDump[8], CodeDump[9], CodeDump[10], CodeDump[11], CodeDump[12], CodeDump[13], CodeDump[14], CodeDump[15], Msg->Process);
-
-		}
-	}
-
-	// rebuild list for buffer check
-	Buff = BUFFERPOOL;	
-	n = 0;
-
-	for (i = 0; i < NUMBEROFBUFFERS; i++)
-	{
-		Bufferlist[n++] = Buff;
-		Buff += 100;			// was (BUFFLEN / 4);
-	}
 }
-

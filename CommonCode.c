@@ -118,6 +118,7 @@ BOOL CheckQHeadder(UINT * Q)
 // Get buffer from Queue
 
 
+#warning TODO: this whole queue management thing needs completely replacing as it assumes int/ptr sizes are the same, and commits some very bad sins!
 VOID * _Q_REM(VOID *PQ, char * File, int Line)
 {
 	UINT * Q;
@@ -153,61 +154,14 @@ VOID * _Q_REM(VOID *PQ, char * File, int Line)
 	return (first);
 }
 
-// Return Buffer to Free Queue
-
-extern VOID * BUFFERPOOL;
-extern UINT * Bufferlist[1000];
 void printStack(void);
 
 
 UINT _ReleaseBuffer(VOID *pBUFF, char * File, int Line)
 {
-	UINT * pointer, * BUFF = pBUFF;
-	int n = 0;
 
-	if (Semaphore.Flag == 0)
-		Debugprintf("ReleaseBuffer called without semaphore from %s Line %d", File, Line);
-
-	// Make sure address is within pool
-
-	while (n <= NUMBEROFBUFFERS)
-	{
-		if (BUFF == Bufferlist[n++])
-			goto BOK1;
-	}
-
-	Debugprintf("ReleaseBuffer %X not in Pool called from %s Line %d", BUFF, File, Line);
-	printStack();
-
-	return 0;
-
-
-BOK1:
-
-	// See if already on free Queue
-
-	pointer = (UINT *)FREE_Q;
-
-	while (pointer)
-	{
-		if (pointer == BUFF)
-		{
-			Debugprintf("Trying to free buffer when already on FREE_Q");
-//			WriteMiniDump();
-
-			return 0;
-		}
-		pointer = (UINT *)pointer[0];
-	}
-
-	pointer = (UINT *)FREE_Q;
-
-	*BUFF=(UINT)pointer;
-
-	FREE_Q=(UINT)BUFF;
-
-	QCOUNT++;
-
+	/* For now we just free the buffer; no need to do pool management */
+	free(pBUFF);
 	return 0;
 }
 
@@ -238,20 +192,7 @@ int _C_Q_ADD(VOID *PQ, VOID *PBUFF, char * File, int Line)
 		return 0;
 	}
 
-	// Make sure address is within pool
-
-	while (n <= NUMBEROFBUFFERS)
-	{
-		if (BUFF == Bufferlist[n++])
-			goto BOK2;
-	}
-
-	Debugprintf("C_Q_ADD %X not in Pool called from %s Line %d", BUFF, File, Line);
-	printStack();
-
-	return 0;
-
-BOK2:
+#warning yes, it uses the first uint in the buffer as the queue chain link.. sigh
 
 	BUFF[0]=0;							// Clear chain in new buffer
 
@@ -335,30 +276,32 @@ int C_Q_COUNT(VOID *PQ)
 	return count;
 }
 
+/*
+ * XXX TODO: adrian - yes, this just malloc()s a buffer of the fixed buffer
+ * size that is pushed into here in the first place.
+ *
+ * Right now it allocates 400 bytes per buffer; BUFFLEN is 360 bytes, so
+ * I am guessing 40 bytes is a bunch of header stuff which will have to go
+ * and be audited.  Eg, the first UINT in the buff is used as a pointer to
+ * the next buffer in a linked list, which reads like a holdover of list
+ * management from assembly code.
+ */
 VOID * _GetBuff(char * File, int Line)
 {
-	UINT * Temp = Q_REM(&FREE_Q);
+	void *buf;
 	MESSAGE * Msg;
 
-//	FindLostBuffers();
-
-	if (Semaphore.Flag == 0)
-		Debugprintf("GetBuff called without semaphore from %s Line %d", File, Line);
-
-	if (Temp)
-	{
-		QCOUNT--;
-
-		if (QCOUNT < MINBUFFCOUNT)
-			MINBUFFCOUNT = QCOUNT;
-
-		Msg = (MESSAGE *)Temp;
-		Msg->Process = (short)GetCurrentProcessId();
+	buf = calloc(1, 400);
+	if (buf == NULL) {
+		perror("GetBuff: malloc fail");
+		return (NULL);
 	}
-	else
-		Debugprintf("Warning - Getbuff returned NULL");
 
-	return Temp;
+	/* XXX TODO: I /think/ this is just debugging */
+	Msg = (MESSAGE *) buf;
+	Msg->Process = (short)GetCurrentProcessId();
+
+	return buf;
 }
 
 void * zalloc(int len)
