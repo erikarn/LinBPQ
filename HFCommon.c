@@ -40,6 +40,13 @@ along with LinBPQ/BPQ32.  If not, see http://www.gnu.org/licenses
 #include "bpq32.h"
 extern char * PortConfig[33];
 
+#if defined(LINBPQ)
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#endif
+
 HANDLE hInstance;
 extern HBRUSH bgBrush;
 extern HWND ClientWnd, FrameWnd;
